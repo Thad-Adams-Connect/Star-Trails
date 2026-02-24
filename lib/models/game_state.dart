@@ -11,8 +11,27 @@ class GameState {
   final Map<String, Planet> planets;
   final List<String> log;
 
-  // Ship upgrades: Map<type, ShipUpgrade> where type is "fuel" or "cargo"
+  // Ship upgrades: Map<type, ShipUpgrade> where type is "fuel", "cargo", "computer", "engine"
   final Map<String, ShipUpgrade> shipUpgrades;
+  
+  // Current ship class
+  final String shipClass; // 'CLASS-B' or 'CLASS-C'
+
+  // Permanent unlock flags (once unlocked, stays unlocked even if credits drop)
+  final bool tier1Unlocked; // 5000cr milestone
+  final bool tier2Unlocked; // 10000cr milestone
+  final bool tier3Unlocked; // 18000cr milestone
+  final bool tier4Unlocked; // 25000cr milestone
+  
+  // Route exploit control: tracks route usage
+  // Key: "SYSTEM_A->SYSTEM_B->COMMODITY" (sorted alphabetically by system)
+  // Value: number of times this route has been used
+  final Map<String, int> routeUsage;
+  
+  // Tracks number of different trades since last route usage (for recovery)
+  // Key: route identifier (same format as routeUsage)
+  // Value: number of different trades since last use
+  final Map<String, int> routeRecoveryCounter;
 
   // Run/Session statistics (reset at end of each session)
   final int totalFuelUsed;
@@ -34,6 +53,12 @@ class GameState {
   final bool
       firstChoiceActive; // After intro, player must make first gameplay choice
 
+  // System history narrative state
+  final bool isNarrativeActive;
+  final int narrativeCharIndex;
+  final String narrativeSystemId;
+  final Map<String, bool> systemFirstVisit;
+
   // Player identity
   final String captainName;
   final String shipName;
@@ -48,6 +73,13 @@ class GameState {
     required this.planets,
     required this.log,
     required this.shipUpgrades,
+    this.shipClass = 'CLASS-B',
+    this.tier1Unlocked = false,
+    this.tier2Unlocked = false,
+    this.tier3Unlocked = false,
+    this.tier4Unlocked = false,
+    Map<String, int>? routeUsage,
+    Map<String, int>? routeRecoveryCounter,
     this.captainName = '',
     this.shipName = '',
     this.currentSessionId = '',
@@ -64,7 +96,14 @@ class GameState {
     this.isIntroActive = false,
     this.introCharIndex = 0,
     this.firstChoiceActive = false,
-  }) : highestCreditsReached = highestCreditsReached ?? credits;
+    this.isNarrativeActive = false,
+    this.narrativeCharIndex = 0,
+    this.narrativeSystemId = '',
+    Map<String, bool>? systemFirstVisit,
+  }) : systemFirstVisit = systemFirstVisit ?? const {},
+       highestCreditsReached = highestCreditsReached ?? credits,
+       routeUsage = routeUsage ?? const {},
+       routeRecoveryCounter = routeRecoveryCounter ?? const {};
 
   factory GameState.initial() {
     final planets = <String, Planet>{};
@@ -80,6 +119,8 @@ class GameState {
     final shipUpgrades = <String, ShipUpgrade>{
       'fuel': ShipUpgrade.initial('fuel'),
       'cargo': ShipUpgrade.initial('cargo'),
+      'computer': ShipUpgrade.initial('computer'),
+      'engine': ShipUpgrade.initial('engine'),
     };
 
     return GameState(
@@ -90,12 +131,23 @@ class GameState {
       planets: planets,
       log: [],
       shipUpgrades: shipUpgrades,
+      shipClass: 'CLASS-B',
+      tier1Unlocked: false,
+      tier2Unlocked: false,
+      tier3Unlocked: false,
+      tier4Unlocked: false,
       captainName: '',
       shipName: '',
       currentSessionId: '',
       isIntroActive: true,
       introCharIndex: 0,
       firstChoiceActive: false,
+      isNarrativeActive: false,
+      narrativeCharIndex: 0,
+      narrativeSystemId: '',
+      systemFirstVisit: {
+        for (final planetId in GameConstants.planetIds) planetId: true,
+      },
     );
   }
 
@@ -107,16 +159,50 @@ class GameState {
     return getCargoCapacity() - cargoUsed;
   }
 
-  /// Get the current fuel capacity based on upgrades.
+  /// Get the current fuel capacity based on ship class and upgrades.
   int getFuelCapacity() {
+    final shipSpec = GameConstants.shipSpecs[shipClass]!;
+    
+    // For CLASS-C, use ship's base capacity (not affected by fuel upgrades)
+    if (shipClass == 'CLASS-C') {
+      return shipSpec.fuelCapacity;
+    }
+    
+    // For CLASS-B, use upgrade tier capacity
     final fuelUpgrade = shipUpgrades['fuel']!;
     return GameConstants.upgradeTiers[fuelUpgrade.currentTier].capacity;
   }
 
-  /// Get the current cargo capacity based on upgrades.
+  /// Get the current cargo capacity based on ship class and upgrades.
   int getCargoCapacity() {
+    final shipSpec = GameConstants.shipSpecs[shipClass]!;
+    
+    // For CLASS-C, use ship's base capacity (not affected by cargo upgrades)
+    if (shipClass == 'CLASS-C') {
+      return shipSpec.cargoCapacity;
+    }
+    
+    // For CLASS-B, use upgrade tier capacity
     final cargoUpgrade = shipUpgrades['cargo']!;
     return GameConstants.upgradeTiers[cargoUpgrade.currentTier].capacity;
+  }
+  
+  /// Get the current computer tier, accounting for ship class
+  int getComputerTier() {
+    // CLASS-C includes Computer T1 and T2 by default
+    if (shipClass == 'CLASS-C') {
+      return 2;
+    }
+    
+    // Otherwise use upgrade tier
+    final computerUpgrade = shipUpgrades['computer'];
+    return computerUpgrade?.currentTier ?? 0;
+  }
+  
+  /// Get the current engine tier
+  int getEngineTier() {
+    final engineUpgrade = shipUpgrades['engine'];
+    return engineUpgrade?.currentTier ?? 0;
   }
 
   Planet get currentPlanet => planets[location]!;
@@ -136,6 +222,13 @@ class GameState {
     Map<String, Planet>? planets,
     List<String>? log,
     Map<String, ShipUpgrade>? shipUpgrades,
+    String? shipClass,
+    bool? tier1Unlocked,
+    bool? tier2Unlocked,
+    bool? tier3Unlocked,
+    bool? tier4Unlocked,
+    Map<String, int>? routeUsage,
+    Map<String, int>? routeRecoveryCounter,
     String? captainName,
     String? shipName,
     String? currentSessionId,
@@ -152,6 +245,10 @@ class GameState {
     bool? isIntroActive,
     int? introCharIndex,
     bool? firstChoiceActive,
+    bool? isNarrativeActive,
+    int? narrativeCharIndex,
+    String? narrativeSystemId,
+    Map<String, bool>? systemFirstVisit,
   }) {
     final resolvedCredits = credits ?? this.credits;
     final resolvedHighestCredits =
@@ -169,6 +266,13 @@ class GameState {
       log: log ?? List<String>.from(this.log),
       shipUpgrades:
           shipUpgrades ?? Map<String, ShipUpgrade>.from(this.shipUpgrades),
+      shipClass: shipClass ?? this.shipClass,
+      tier1Unlocked: tier1Unlocked ?? this.tier1Unlocked,
+      tier2Unlocked: tier2Unlocked ?? this.tier2Unlocked,
+      tier3Unlocked: tier3Unlocked ?? this.tier3Unlocked,
+      tier4Unlocked: tier4Unlocked ?? this.tier4Unlocked,
+      routeUsage: routeUsage ?? Map<String, int>.from(this.routeUsage),
+      routeRecoveryCounter: routeRecoveryCounter ?? Map<String, int>.from(this.routeRecoveryCounter),
       captainName: captainName ?? this.captainName,
       shipName: shipName ?? this.shipName,
       currentSessionId: currentSessionId ?? this.currentSessionId,
@@ -192,6 +296,11 @@ class GameState {
       isIntroActive: isIntroActive ?? this.isIntroActive,
       introCharIndex: introCharIndex ?? this.introCharIndex,
       firstChoiceActive: firstChoiceActive ?? this.firstChoiceActive,
+      isNarrativeActive: isNarrativeActive ?? this.isNarrativeActive,
+      narrativeCharIndex: narrativeCharIndex ?? this.narrativeCharIndex,
+      narrativeSystemId: narrativeSystemId ?? this.narrativeSystemId,
+      systemFirstVisit:
+          systemFirstVisit ?? Map<String, bool>.from(this.systemFirstVisit),
     );
   }
 
@@ -205,6 +314,13 @@ class GameState {
       'planets': planets.map((k, v) => MapEntry(k, v.toJson())),
       'log': log,
       'shipUpgrades': shipUpgrades.map((k, v) => MapEntry(k, v.toJson())),
+      'shipClass': shipClass,
+      'tier1Unlocked': tier1Unlocked,
+      'tier2Unlocked': tier2Unlocked,
+      'tier3Unlocked': tier3Unlocked,
+      'tier4Unlocked': tier4Unlocked,
+      'routeUsage': routeUsage,
+      'routeRecoveryCounter': routeRecoveryCounter,
       'captainName': captainName,
       'shipName': shipName,
       'currentSessionId': currentSessionId,
@@ -221,6 +337,10 @@ class GameState {
       'isIntroActive': isIntroActive,
       'introCharIndex': introCharIndex,
       'firstChoiceActive': firstChoiceActive,
+      'isNarrativeActive': isNarrativeActive,
+      'narrativeCharIndex': narrativeCharIndex,
+      'narrativeSystemId': narrativeSystemId,
+      'systemFirstVisit': systemFirstVisit,
     };
   }
 
@@ -242,6 +362,31 @@ class GameState {
       upgradesMap['fuel'] = ShipUpgrade.initial('fuel');
       upgradesMap['cargo'] = ShipUpgrade.initial('cargo');
     }
+    
+    // Ensure new upgrade types exist (for saves before they were added)
+    if (!upgradesMap.containsKey('computer')) {
+      upgradesMap['computer'] = ShipUpgrade.initial('computer');
+    }
+    if (!upgradesMap.containsKey('engine')) {
+      upgradesMap['engine'] = ShipUpgrade.initial('engine');
+    }
+
+    final systemFirstVisitJson =
+        json['systemFirstVisit'] as Map<String, dynamic>?;
+    final systemFirstVisit = <String, bool>{
+      for (final planetId in GameConstants.planetIds)
+        planetId: systemFirstVisitJson?[planetId] as bool? ?? true,
+    };
+    
+    final routeUsageJson = json['routeUsage'] as Map<String, dynamic>?;
+    final routeUsage = routeUsageJson != null
+        ? Map<String, int>.from(routeUsageJson)
+        : <String, int>{};
+    
+    final routeRecoveryJson = json['routeRecoveryCounter'] as Map<String, dynamic>?;
+    final routeRecoveryCounter = routeRecoveryJson != null
+        ? Map<String, int>.from(routeRecoveryJson)
+        : <String, int>{};
 
     return GameState(
       location: json['location'] as String,
@@ -253,6 +398,13 @@ class GameState {
       planets: planetsMap,
       log: List<String>.from(json['log'] as List),
       shipUpgrades: upgradesMap,
+      shipClass: json['shipClass'] as String? ?? 'CLASS-B',
+      tier1Unlocked: json['tier1Unlocked'] as bool? ?? false,
+      tier2Unlocked: json['tier2Unlocked'] as bool? ?? false,
+      tier3Unlocked: json['tier3Unlocked'] as bool? ?? false,
+      tier4Unlocked: json['tier4Unlocked'] as bool? ?? false,
+      routeUsage: routeUsage,
+      routeRecoveryCounter: routeRecoveryCounter,
       captainName: json['captainName'] as String? ?? '',
       shipName: json['shipName'] as String? ?? '',
       currentSessionId: json['currentSessionId'] as String? ?? '',
@@ -273,6 +425,10 @@ class GameState {
       isIntroActive: json['isIntroActive'] as bool? ?? false,
       introCharIndex: json['introCharIndex'] as int? ?? 0,
       firstChoiceActive: json['firstChoiceActive'] as bool? ?? false,
+      isNarrativeActive: json['isNarrativeActive'] as bool? ?? false,
+      narrativeCharIndex: json['narrativeCharIndex'] as int? ?? 0,
+      narrativeSystemId: json['narrativeSystemId'] as String? ?? '',
+      systemFirstVisit: systemFirstVisit,
     );
   }
 
@@ -288,6 +444,13 @@ class GameState {
       planets: Map<String, Planet>.from(planets),
       log: [],
       shipUpgrades: Map<String, ShipUpgrade>.from(shipUpgrades),
+      shipClass: shipClass,
+      tier1Unlocked: tier1Unlocked,
+      tier2Unlocked: tier2Unlocked,
+      tier3Unlocked: tier3Unlocked,
+      tier4Unlocked: tier4Unlocked,
+      routeUsage: Map<String, int>.from(routeUsage),
+      routeRecoveryCounter: Map<String, int>.from(routeRecoveryCounter),
       captainName: captainName,
       shipName: shipName,
       currentSessionId: '',
@@ -307,6 +470,10 @@ class GameState {
       isIntroActive: false,
       introCharIndex: 0,
       firstChoiceActive: false,
+      isNarrativeActive: false,
+      narrativeCharIndex: 0,
+      narrativeSystemId: '',
+      systemFirstVisit: Map<String, bool>.from(systemFirstVisit),
     );
   }
 }

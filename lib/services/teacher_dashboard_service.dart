@@ -60,7 +60,16 @@ class TeacherDashboardService {
   }
 
   /// End the current session. Returns the updated data.
-  Future<TeacherDashboardData> endSession() async {
+  /// Optional run summary data can be provided to record session statistics.
+  Future<TeacherDashboardData> endSession({
+    int? startingCredits,
+    int? finalCredits,
+    int? totalFuelUsed,
+    int? totalCreditsSpentOnFuel,
+    int? totalCreditsSpentOnGoods,
+    int? totalCreditsSpentOnUpgrades,
+    int? totalCreditsEarned,
+  }) async {
     await _ensureInitialized();
     if (_data.sessions.isEmpty) return _data;
 
@@ -75,6 +84,13 @@ class TeacherDashboardService {
     final endedSession = lastSession.copyWith(
       endTime: now,
       durationMs: duration,
+      startingCredits: startingCredits,
+      finalCredits: finalCredits,
+      totalFuelUsed: totalFuelUsed,
+      totalCreditsSpentOnFuel: totalCreditsSpentOnFuel,
+      totalCreditsSpentOnGoods: totalCreditsSpentOnGoods,
+      totalCreditsSpentOnUpgrades: totalCreditsSpentOnUpgrades,
+      totalCreditsEarned: totalCreditsEarned,
     );
 
     final updatedSessions = [..._data.sessions];
@@ -141,6 +157,26 @@ class TeacherDashboardService {
     );
     final updatedReflections = [..._data.reflections, reflection];
     _data = _data.copyWith(reflections: updatedReflections);
+    await _save();
+    return _data;
+  }
+
+  /// Add a system entry to the current session logbook.
+  Future<TeacherDashboardData> addSystemEntry({
+    required String sessionId,
+    required String systemId,
+    required String historyText,
+  }) async {
+    await _ensureInitialized();
+    final entry = SystemEntryRecord(
+      id: _generateUniqueId(),
+      timestamp: DateTime.now(),
+      sessionId: sessionId,
+      systemId: systemId,
+      historyText: historyText,
+    );
+    final updatedEntries = [..._data.systemEntries, entry];
+    _data = _data.copyWith(systemEntries: updatedEntries);
     await _save();
     return _data;
   }

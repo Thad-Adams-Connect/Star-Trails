@@ -6,6 +6,7 @@ import '../utils/hud_panel_border.dart';
 import '../utils/starfield_painter.dart';
 import '../utils/grid_overlay_painter.dart';
 import '../utils/reflection_grouping.dart';
+import '../widgets/end_run_summary.dart';
 
 class TeacherModeScreen extends StatefulWidget {
   const TeacherModeScreen({super.key});
@@ -213,18 +214,105 @@ class _TeacherModeScreenState extends State<TeacherModeScreen>
             final session = completedSessions[index];
             final duration = session.durationMs ~/ 1000 ~/ 60;
             final durationSec = (session.durationMs ~/ 1000) % 60;
+            
             return Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: _buildDataSection(
-                title: 'Session ${index + 1}',
-                content: [
-                  'Duration: $duration min $durationSec sec',
-                  'Trades completed: ${session.tradesCompleted}',
-                  'Start: ${session.startTime.toString().split('.')[0]}',
-                  if (session.endTime != null)
-                    'End: ${session.endTime!.toString().split('.')[0]}',
-                ],
-                icon: Icons.videogame_asset,
+              padding: const EdgeInsets.only(bottom: 20),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.6),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: AppTheme.phosphorGreen.withValues(alpha: 0.5),
+                    width: 1,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Session ${index + 1}',
+                      style: AppTheme.terminalBody.copyWith(
+                        color: AppTheme.phosphorGreenBright,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    // Show End Run Summary
+                    EndRunSummary(
+                      startingCredits: session.startingCredits,
+                      finalCredits: session.finalCredits,
+                      totalFuelUsed: session.totalFuelUsed,
+                      totalCreditsSpentOnFuel: session.totalCreditsSpentOnFuel,
+                      totalCreditsSpentOnGoods: session.totalCreditsSpentOnGoods,
+                      totalCreditsSpentOnUpgrades:
+                          session.totalCreditsSpentOnUpgrades,
+                      totalCreditsEarned: session.totalCreditsEarned,
+                    ),
+                    const SizedBox(height: 16),
+                    // Additional session info
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.4),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Session Details',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'monospace',
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Duration: $duration min $durationSec sec',
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 12,
+                              fontFamily: 'monospace',
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Trades: ${session.tradesCompleted}',
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 12,
+                              fontFamily: 'monospace',
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Start: ${session.startTime.toString().split('.')[0]}',
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 12,
+                              fontFamily: 'monospace',
+                            ),
+                          ),
+                          if (session.endTime != null) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              'End: ${session.endTime!.toString().split('.')[0]}',
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 12,
+                                fontFamily: 'monospace',
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             );
           },
@@ -266,12 +354,13 @@ class _TeacherModeScreenState extends State<TeacherModeScreen>
           itemCount: sessionGroups.length,
           itemBuilder: (context, index) {
             final group = sessionGroups[index];
+            
             return Padding(
               padding: const EdgeInsets.only(bottom: 20),
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppTheme.phosphorGreenDim.withValues(alpha: 0.12),
+                  color: Colors.black.withValues(alpha: 0.6),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
                     color: AppTheme.phosphorGreen.withValues(alpha: 0.5),
@@ -283,9 +372,21 @@ class _TeacherModeScreenState extends State<TeacherModeScreen>
                   children: [
                     Text(
                       'Session ${index + 1}',
-                      style: const TextStyle(
+                      style: AppTheme.terminalBody.copyWith(
                         color: AppTheme.phosphorGreenBright,
                         fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    // Reflections
+                    Text(
+                      'Reflections',
+                      style: TextStyle(
+                        color: Colors.amber.withValues(alpha: 0.95),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        fontFamily: 'monospace',
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -297,6 +398,7 @@ class _TeacherModeScreenState extends State<TeacherModeScreen>
                         style: const TextStyle(
                           color: AppTheme.phosphorGreenBright,
                           fontWeight: FontWeight.bold,
+                          fontSize: 13,
                         ),
                       ),
                       const SizedBox(height: 6),
@@ -304,6 +406,7 @@ class _TeacherModeScreenState extends State<TeacherModeScreen>
                         '• ${group.reflections[reflectionIndex].answer.trim().isEmpty ? "(No answer)" : group.reflections[reflectionIndex].answer}',
                         style: const TextStyle(
                           color: Colors.white,
+                          fontSize: 13,
                         ),
                       ),
                       if (reflectionIndex < group.reflections.length - 1)

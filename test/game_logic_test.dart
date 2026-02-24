@@ -109,8 +109,9 @@ void main() {
 
     test('Bid price adjusts correctly based on demand levels', () {
       const item = 'Food';
-      final baseAsk = GameConstants.baseAskPrices['HELIOS REACH']![item]!;
-      final baseBid = (baseAsk * 0.9).floor();
+      final marketPrice = GameConstants.getMarketPrice('HELIOS REACH', item);
+      final baseAsk = marketPrice.buy;
+      final baseSell = marketPrice.sell;
 
       for (int demand = 0; demand <= 3; demand++) {
         final planet = Planet(id: 'HELIOS REACH', demandIndex: {
@@ -126,14 +127,20 @@ void main() {
             reason: 'Bid must be less than ask at demand=$demand');
 
         if (demand == 0) {
-          expect(bid, equals((baseBid * 0.9).floor()),
-              reason: 'At demand=0, bid should be 90% of baseBid');
-        } else if (demand == 3) {
-          final expectedBid = (baseBid * 1.05).floor();
-          if (expectedBid >= ask) {
-            expect(bid, equals(ask - 1),
-                reason: 'Bid should be capped at ask-1 when 105% exceeds ask');
+          final expectedBid = (baseSell * 0.9).floor();
+          expect(bid, equals(expectedBid),
+              reason: 'At demand=0, bid should be 90% of base sell');
+        } else if (demand == 1) {
+          final expectedBid = (baseSell * 0.95).floor();
+          expect(bid, equals(expectedBid),
+              reason: 'At demand=1, bid should be 95% of base sell');
+        } else {
+          var expectedBid = baseSell;
+          if (expectedBid >= baseAsk) {
+            expectedBid = baseAsk - 1;
           }
+          expect(bid, equals(expectedBid),
+              reason: 'At demand=$demand, bid should be at base sell cap');
         }
       }
     });

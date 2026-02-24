@@ -12,28 +12,27 @@ class Planet {
   }
 
   int getAskPrice(String itemId) {
-    return GameConstants.baseAskPrices[id]![itemId]!;
+    return GameConstants.getMarketPrice(id, itemId).buy;
   }
 
   int getBidPrice(String itemId) {
-    final baseAsk = getAskPrice(itemId);
-    final baseBid = (baseAsk * 0.9).floor();
+    final marketPrice = GameConstants.getMarketPrice(id, itemId);
+    final baseSell = marketPrice.sell;
     final demand = demandIndex[itemId]!;
-
-    int adjustedBid;
+    final double multiplier;
     if (demand == 0) {
-      adjustedBid = (baseBid * 0.9).floor();
+      multiplier = 0.9;
     } else if (demand == 1) {
-      adjustedBid = (baseBid * 0.95).floor();
-    } else if (demand == 2) {
-      adjustedBid = baseBid;
+      multiplier = 0.95;
     } else {
-      adjustedBid = (baseBid * 1.05).floor();
+      multiplier = 1.0;
     }
 
+    var adjustedBid = (baseSell * multiplier).floor();
+
     // Ensure bid < ask by at least 1
-    if (adjustedBid >= baseAsk) {
-      adjustedBid = baseAsk - 1;
+    if (adjustedBid >= marketPrice.buy) {
+      adjustedBid = marketPrice.buy - 1;
     }
 
     return adjustedBid;
@@ -64,9 +63,18 @@ class Planet {
   Map<String, dynamic> toJson() => {'id': id, 'demandIndex': demandIndex};
 
   factory Planet.fromJson(Map<String, dynamic> json) {
+    final demandIndexJson = Map<String, int>.from(json['demandIndex'] as Map);
+    
+    // Ensure all current itemIds have entries (for backward compatibility)
+    for (var item in GameConstants.itemIds) {
+      if (!demandIndexJson.containsKey(item)) {
+        demandIndexJson[item] = 3; // Default demand level
+      }
+    }
+    
     return Planet(
       id: json['id'] as String,
-      demandIndex: Map<String, int>.from(json['demandIndex'] as Map),
+      demandIndex: demandIndexJson,
     );
   }
 }

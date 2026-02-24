@@ -27,6 +27,55 @@ class ShipUpgradeTier {
   }
 }
 
+/// Represents a ship specification (different ship classes).
+class ShipSpec {
+  final String name;
+  final int fuelCapacity;
+  final int cargoCapacity;
+  final int baseCost;
+  final int resaleValue;
+  final String description;
+  final bool includesComputerT1;
+  final bool includesComputerT2;
+
+  const ShipSpec({
+    required this.name,
+    required this.fuelCapacity,
+    required this.cargoCapacity,
+    required this.baseCost,
+    required this.resaleValue,
+    required this.description,
+    this.includesComputerT1 = false,
+    this.includesComputerT2 = false,
+  });
+
+  factory ShipSpec.fromJson(Map<String, dynamic> json) {
+    return ShipSpec(
+      name: json['name'] as String,
+      fuelCapacity: json['fuelCapacity'] as int,
+      cargoCapacity: json['cargoCapacity'] as int,
+      baseCost: json['baseCost'] as int,
+      resaleValue: json['resaleValue'] as int,
+      description: json['description'] as String,
+      includesComputerT1: json['includesComputerT1'] as bool? ?? false,
+      includesComputerT2: json['includesComputerT2'] as bool? ?? false,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'fuelCapacity': fuelCapacity,
+      'cargoCapacity': cargoCapacity,
+      'baseCost': baseCost,
+      'resaleValue': resaleValue,
+      'description': description,
+      'includesComputerT1': includesComputerT1,
+      'includesComputerT2': includesComputerT2,
+    };
+  }
+}
+
 /// Represents the current state of a specific upgrade type (fuel or cargo).
 class ShipUpgrade {
   final String type; // "fuel" or "cargo"

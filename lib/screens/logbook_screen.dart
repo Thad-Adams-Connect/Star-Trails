@@ -7,6 +7,7 @@ import '../utils/hud_panel_border.dart';
 import '../utils/starfield_painter.dart';
 import '../utils/grid_overlay_painter.dart';
 import '../utils/reflection_grouping.dart';
+import '../widgets/end_run_summary.dart';
 
 class LogbookScreen extends StatefulWidget {
   const LogbookScreen({super.key});
@@ -20,11 +21,75 @@ class _LogbookScreenState extends State<LogbookScreen> {
   Widget build(BuildContext context) {
     final provider = context.watch<GameProvider>();
     final dashboardData = provider.dashboard.getData();
-    final sessionGroups = buildSessionReflectionGroups(
+    final reflectionGroups = buildSessionReflectionGroups(
       reflections: dashboardData.reflections,
       sessions: dashboardData.sessions,
       deviceId: dashboardData.deviceId,
     );
+    final reflectionsBySession = <String, List<ReflectionRecord>>{
+      for (final group in reflectionGroups)
+        group.sessionId: group.reflections,
+    };
+    final systemEntriesBySession = <String, List<SystemEntryRecord>>{};
+    for (final entry in dashboardData.systemEntries) {
+      systemEntriesBySession
+          .putIfAbsent(entry.sessionId, () => [])
+          .add(entry);
+    }
+    for (final entries in systemEntriesBySession.values) {
+      entries.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+    }
+    final sessionIds = <String>{
+      ...reflectionsBySession.keys,
+      ...systemEntriesBySession.keys,
+    };
+    final orderedSessions = [...dashboardData.sessions]
+      ..sort((a, b) => a.startTime.compareTo(b.startTime));
+    final sessionOrder = <String, int>{
+      for (var index = 0; index < orderedSessions.length; index++)
+        orderedSessions[index].id: index,
+    };
+    final orderedSessionIds = sessionIds.toList()
+      ..sort((a, b) {
+        final aOrder = sessionOrder[a];
+        final bOrder = sessionOrder[b];
+
+        if (aOrder != null && bOrder != null) {
+          return aOrder.compareTo(bOrder);
+        }
+        if (aOrder != null) return -1;
+        if (bOrder != null) return 1;
+
+        final aReflections = reflectionsBySession[a] ?? const [];
+        final bReflections = reflectionsBySession[b] ?? const [];
+        final aEntries = systemEntriesBySession[a] ?? const [];
+        final bEntries = systemEntriesBySession[b] ?? const [];
+
+        final aTimes = <DateTime>[];
+        final bTimes = <DateTime>[];
+        if (aReflections.isNotEmpty) {
+          aTimes.add(aReflections.first.timestamp);
+        }
+        if (aEntries.isNotEmpty) {
+          aTimes.add(aEntries.first.timestamp);
+        }
+        if (bReflections.isNotEmpty) {
+          bTimes.add(bReflections.first.timestamp);
+        }
+        if (bEntries.isNotEmpty) {
+          bTimes.add(bEntries.first.timestamp);
+        }
+
+        if (aTimes.isEmpty && bTimes.isEmpty) {
+          return a.compareTo(b);
+        }
+        if (aTimes.isEmpty) return 1;
+        if (bTimes.isEmpty) return -1;
+
+        final aTime = aTimes.reduce((a, b) => a.isBefore(b) ? a : b);
+        final bTime = bTimes.reduce((a, b) => a.isBefore(b) ? a : b);
+        return aTime.compareTo(bTime);
+      });
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -57,7 +122,7 @@ class _LogbookScreenState extends State<LogbookScreen> {
             ),
           ),
           SafeArea(
-            child: sessionGroups.isEmpty
+            child: orderedSessionIds.isEmpty
                 ? Center(
                     child: Padding(
                       padding: const EdgeInsets.all(32),
@@ -70,14 +135,31 @@ class _LogbookScreenState extends State<LogbookScreen> {
                   )
                 : ListView.builder(
                     padding: const EdgeInsets.all(16),
-                    itemCount: sessionGroups.length,
+                    itemCount: orderedSessionIds.length,
                     itemBuilder: (context, index) {
-                      final group = sessionGroups[index];
+                      final sessionId = orderedSessionIds[index];
+                      final reflections =
+                          reflectionsBySession[sessionId] ?? const [];
+                      final group = SessionReflectionGroup(
+                        sessionId: sessionId,
+                        reflections: reflections,
+                      );
+                      // Find the matching session record for this group
+                      final session = dashboardData.sessions.firstWhere(
+                        (s) => s.id == sessionId,
+                        orElse: () => SessionRecord(
+                          id: '',
+                          startTime: DateTime.now(),
+                        ),
+                      );
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 16),
                         child: _LogbookSessionEntry(
                           sessionNumber: index + 1,
                           group: group,
+                          session: session.id.isNotEmpty ? session : null,
+                          systemEntries:
+                              systemEntriesBySession[sessionId] ?? [],
                           onEdit: (reflection) =>
                               _editReflection(context, reflection),
                         ),
@@ -113,11 +195,15 @@ class _LogbookScreenState extends State<LogbookScreen> {
 class _LogbookSessionEntry extends StatelessWidget {
   final int sessionNumber;
   final SessionReflectionGroup group;
+  final SessionRecord? session;
+  final List<SystemEntryRecord> systemEntries;
   final ValueChanged<ReflectionRecord> onEdit;
 
   const _LogbookSessionEntry({
     required this.sessionNumber,
     required this.group,
+    this.session,
+    required this.systemEntries,
     required this.onEdit,
   });
 
@@ -147,7 +233,78 @@ class _LogbookSessionEntry extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 16),
+                      // Show End Run Summary if session data exists
+                      if (session != null) ...[
+                        EndRunSummary(
+                          startingCredits: session?.startingCredits,
+                          finalCredits: session?.finalCredits,
+                          totalFuelUsed: session?.totalFuelUsed,
+                          totalCreditsSpentOnFuel:
+                              session?.totalCreditsSpentOnFuel,
+                          totalCreditsSpentOnGoods:
+                              session?.totalCreditsSpentOnGoods,
+                          totalCreditsSpentOnUpgrades:
+                              session?.totalCreditsSpentOnUpgrades,
+                          totalCreditsEarned: session?.totalCreditsEarned,
+                        ),
+                        const SizedBox(height: 16),
+                        if (systemEntries.isNotEmpty) ...[
+                          // Divider
+                          Container(
+                            height: 1,
+                            decoration: BoxDecoration(
+                              color: AppTheme.phosphorGreenDim
+                                  .withValues(alpha: 0.5),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'System Entry',
+                            style: AppTheme.terminalBody.copyWith(
+                              color: Colors.amber.withValues(alpha: 0.95),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          for (final entry in systemEntries) ...[
+                            Text(
+                              'System History — ${entry.systemId}',
+                              style: AppTheme.terminalBody.copyWith(
+                                color: AppTheme.phosphorGreenBright,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              entry.historyText,
+                              style: AppTheme.terminalBody,
+                            ),
+                            const SizedBox(height: 16),
+                          ],
+                        ],
+                        // Divider
+                        Container(
+                          height: 1,
+                          decoration: BoxDecoration(
+                            color: AppTheme.phosphorGreenDim
+                                .withValues(alpha: 0.5),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        // Reflections heading
+                        Text(
+                          'Reflections',
+                          style: AppTheme.terminalBody.copyWith(
+                            color: Colors.amber.withValues(alpha: 0.95),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                      ],
+                      // Show reflections
                       for (var index = 0;
                           index < group.reflections.length;
                           index++) ...[

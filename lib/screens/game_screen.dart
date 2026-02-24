@@ -37,6 +37,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
       if (!mounted) return;
       _focusCommandInput();
       _scheduleIntroStart();
+      _scheduleNarrativeStart();
       unawaited(_endRunIfStuck(context.read<GameProvider>()));
     });
   }
@@ -49,6 +50,17 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
       Future<void>.delayed(const Duration(milliseconds: 1500), () {
         if (!mounted) return;
         provider.startIntroTypewriter();
+      });
+    }
+  }
+
+  void _scheduleNarrativeStart() {
+    if (!mounted) return;
+    final provider = context.read<GameProvider>();
+    if (provider.isNarrativeActive) {
+      Future<void>.delayed(const Duration(milliseconds: 300), () {
+        if (!mounted) return;
+        provider.startNarrativeTypewriter();
       });
     }
   }
@@ -115,6 +127,10 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
     if (!mounted) return;
     final provider = context.read<GameProvider>();
 
+    if (provider.isNarrativeActive) {
+      return;
+    }
+
     // If intro is active, any input skips it
     if (provider.isIntroActive) {
       provider.skipIntro();
@@ -160,8 +176,12 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
   KeyEventResult _onCommandInputKeyEvent(
     KeyEvent event, {
     required bool isIntroActive,
+    required bool isNarrativeActive,
   }) {
-    if (event is! KeyDownEvent || isIntroActive || _commandHistory.isEmpty) {
+    if (event is! KeyDownEvent ||
+        isIntroActive ||
+        isNarrativeActive ||
+        _commandHistory.isEmpty) {
       return KeyEventResult.ignored;
     }
 
@@ -439,6 +459,8 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
     return Consumer<GameProvider>(
       builder: (context, provider, _) {
         final isIntroActive = provider.isIntroActive;
+        final isNarrativeActive = provider.isNarrativeActive;
+        final isInputDisabled = isIntroActive || isNarrativeActive;
         return Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
@@ -458,18 +480,21 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                   onKeyEvent: (_, event) => _onCommandInputKeyEvent(
                     event,
                     isIntroActive: isIntroActive,
+                    isNarrativeActive: isNarrativeActive,
                   ),
                   child: TextField(
                     controller: _commandController,
                     focusNode: _commandFocusNode,
                     autofocus: true,
-                    enabled: !isIntroActive,
+                    enabled: !isInputDisabled,
                     style: AppTheme.terminalPrompt,
                     decoration: InputDecoration(
                       border: InputBorder.none,
                       hintText: isIntroActive
                           ? 'Press SKIP to continue'
-                          : 'Enter command',
+                          : isNarrativeActive
+                              ? 'Narrative in progress'
+                              : 'Enter command',
                       hintStyle:
                           const TextStyle(color: AppTheme.phosphorGreenDim),
                     ),
@@ -485,16 +510,18 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
               Material(
                 color: Colors.transparent,
                 child: InkWell(
-                  onTap: () async {
-                    if (isIntroActive) {
-                      provider.skipIntro();
-                      _commandController.clear();
-                      _scrollToBottom();
-                      await provider.saveGame();
-                    } else {
-                      await _sendCommand();
-                    }
-                  },
+                  onTap: isNarrativeActive
+                      ? null
+                      : () async {
+                          if (isIntroActive) {
+                            provider.skipIntro();
+                            _commandController.clear();
+                            _scrollToBottom();
+                            await provider.saveGame();
+                          } else {
+                            await _sendCommand();
+                          }
+                        },
                   borderRadius: BorderRadius.circular(6),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
@@ -514,7 +541,11 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                       ],
                     ),
                     child: Text(
-                      isIntroActive ? 'SKIP' : 'SEND',
+                      isIntroActive
+                          ? 'SKIP'
+                          : isNarrativeActive
+                              ? 'WAIT'
+                              : 'SEND',
                       style: const TextStyle(
                         color: AppTheme.phosphorGreenBright,
                         fontWeight: FontWeight.bold,

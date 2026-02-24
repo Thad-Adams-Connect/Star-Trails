@@ -7,6 +7,7 @@ import '../utils/hud_panel_border.dart';
 import '../utils/starfield_painter.dart';
 import '../utils/grid_overlay_painter.dart';
 import '../utils/pixel_route.dart';
+import '../widgets/end_run_summary.dart';
 import 'menu_screen.dart';
 
 class EndRunScreen extends StatefulWidget {
@@ -56,6 +57,7 @@ class _EndRunScreenState extends State<EndRunScreen> {
     if (!mounted) return;
     final provider = context.read<GameProvider>();
     final sessionId = provider.state.currentSessionId;
+    final state = provider.state;
 
     // Save reflections to dashboard if enabled
     if (_showReflection) {
@@ -70,8 +72,16 @@ class _EndRunScreenState extends State<EndRunScreen> {
       }
     }
 
-    // End the current session
-    await provider.dashboard.endSession();
+    // End the current session with run summary data
+    await provider.dashboard.endSession(
+      startingCredits: 1000,
+      finalCredits: state.credits,
+      totalFuelUsed: state.totalFuelUsed,
+      totalCreditsSpentOnFuel: state.totalCreditsSpentOnFuel,
+      totalCreditsSpentOnGoods: state.totalCreditsSpentOnGoods,
+      totalCreditsSpentOnUpgrades: state.totalCreditsSpentOnUpgrades,
+      totalCreditsEarned: state.totalCreditsEarned,
+    );
 
     if (provider.sessionIsGameOver) {
       await _persistence.clearGameState();
@@ -119,7 +129,6 @@ class _EndRunScreenState extends State<EndRunScreen> {
       body: Consumer<GameProvider>(
         builder: (context, provider, _) {
           final state = provider.state;
-          final netResult = state.credits - 1000;
 
           return Stack(
             fit: StackFit.expand,
@@ -168,36 +177,14 @@ class _EndRunScreenState extends State<EndRunScreen> {
                                             textAlign: TextAlign.center,
                                           ),
                                         ),
-                                      _buildSummaryCard(
-                                        'RUN SUMMARY',
-                                        [
-                                          const _SummaryRow(
-                                              'Starting Credits', '1000'),
-                                          _SummaryRow('Final Credits',
-                                              '${state.credits}'),
-                                          _SummaryRow(
-                                              'Net Result', '$netResult',
-                                              highlight: netResult >= 0),
-                                          Container(
-                                            height: 1,
-                                            margin: const EdgeInsets.symmetric(
-                                                vertical: 8),
-                                            decoration: BoxDecoration(
-                                              color: AppTheme.phosphorGreenDim
-                                                  .withValues(alpha: 0.6),
-                                            ),
-                                          ),
-                                          _SummaryRow('Total Fuel Used',
-                                              '${state.totalFuelUsed}'),
-                                          _SummaryRow('Credits Spent on Fuel',
-                                              '${state.totalCreditsSpentOnFuel}'),
-                                          _SummaryRow('Credits Spent on Goods',
-                                              '${state.totalCreditsSpentOnGoods}'),
-                                          _SummaryRow('Credits Spent on Upgrades',
-                                              '${state.totalCreditsSpentOnUpgrades}'),
-                                          _SummaryRow('Credits Earned',
-                                              '${state.totalCreditsEarned}'),
-                                        ],
+                                      EndRunSummary(
+                                        startingCredits: 1000,
+                                        finalCredits: state.credits,
+                                        totalFuelUsed: state.totalFuelUsed,
+                                        totalCreditsSpentOnFuel: state.totalCreditsSpentOnFuel,
+                                        totalCreditsSpentOnGoods: state.totalCreditsSpentOnGoods,
+                                        totalCreditsSpentOnUpgrades: state.totalCreditsSpentOnUpgrades,
+                                        totalCreditsEarned: state.totalCreditsEarned,
                                       ),
                                       if (_showReflection) ...[
                                         const SizedBox(height: 20),
@@ -279,40 +266,6 @@ class _EndRunScreenState extends State<EndRunScreen> {
     );
   }
 
-  Widget _buildSummaryCard(String title, List<Widget> children) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppTheme.phosphorGreenDim.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: AppTheme.phosphorGreen.withValues(alpha: 0.5),
-          width: 2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.phosphorGreen.withValues(alpha: 0.08),
-            blurRadius: 6,
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: AppTheme.terminalBody.copyWith(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 16),
-          ...children,
-        ],
-      ),
-    );
-  }
-
   Widget _buildReflectionSection() {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -382,43 +335,6 @@ class _EndRunScreenState extends State<EndRunScreen> {
             ),
             const SizedBox(height: 16),
           ],
-        ],
-      ),
-    );
-  }
-}
-
-class _SummaryRow extends StatelessWidget {
-  final String label;
-  final String value;
-  final bool highlight;
-
-  const _SummaryRow(this.label, this.value, {this.highlight = false});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 14,
-              fontFamily: 'monospace',
-            ),
-          ),
-          Text(
-            value,
-            style: TextStyle(
-              color: highlight ? Colors.amber : AppTheme.phosphorGreenBright,
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'monospace',
-            ),
-          ),
         ],
       ),
     );

@@ -9,6 +9,7 @@ class TeacherDashboardData {
   final int totalPlaytimeMs;
   final List<SessionRecord> sessions;
   final List<ReflectionRecord> reflections;
+  final List<SystemEntryRecord> systemEntries;
 
   TeacherDashboardData({
     required this.deviceId,
@@ -17,6 +18,7 @@ class TeacherDashboardData {
     this.totalPlaytimeMs = 0,
     this.sessions = const [],
     this.reflections = const [],
+    this.systemEntries = const [],
   });
 
   /// Convert to JSON for persistence.
@@ -28,6 +30,7 @@ class TeacherDashboardData {
       'totalPlaytimeMs': totalPlaytimeMs,
       'sessions': sessions.map((s) => s.toJson()).toList(),
       'reflections': reflections.map((r) => r.toJson()).toList(),
+      'systemEntries': systemEntries.map((e) => e.toJson()).toList(),
     };
   }
 
@@ -48,6 +51,11 @@ class TeacherDashboardData {
               .map(ReflectionRecord.fromJson)
               .toList() ??
           [],
+      systemEntries: (json['systemEntries'] as List?)
+              ?.cast<Map<String, dynamic>>()
+              .map(SystemEntryRecord.fromJson)
+              .toList() ??
+          [],
     );
   }
 
@@ -59,6 +67,7 @@ class TeacherDashboardData {
     int? totalPlaytimeMs,
     List<SessionRecord>? sessions,
     List<ReflectionRecord>? reflections,
+    List<SystemEntryRecord>? systemEntries,
   }) {
     return TeacherDashboardData(
       deviceId: deviceId ?? this.deviceId,
@@ -67,6 +76,62 @@ class TeacherDashboardData {
       totalPlaytimeMs: totalPlaytimeMs ?? this.totalPlaytimeMs,
       sessions: sessions ?? this.sessions,
       reflections: reflections ?? this.reflections,
+      systemEntries: systemEntries ?? this.systemEntries,
+    );
+  }
+}
+
+class SystemEntryRecord {
+  final String id;
+  final DateTime timestamp;
+  final String sessionId;
+  final String systemId;
+  final String historyText;
+
+  SystemEntryRecord({
+    required this.id,
+    required this.timestamp,
+    required this.sessionId,
+    required this.systemId,
+    required this.historyText,
+  });
+
+  /// Convert to JSON.
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'timestamp': timestamp.toIso8601String(),
+      'sessionId': sessionId,
+      'systemId': systemId,
+      'historyText': historyText,
+    };
+  }
+
+  /// Create from JSON.
+  factory SystemEntryRecord.fromJson(Map<String, dynamic> json) {
+    return SystemEntryRecord(
+      id: json['id'] as String? ?? '',
+      timestamp: DateTime.parse(json['timestamp'] as String),
+      sessionId: json['sessionId'] as String? ?? '',
+      systemId: json['systemId'] as String? ?? '',
+      historyText: json['historyText'] as String? ?? '',
+    );
+  }
+
+  /// Create a copy with updated fields.
+  SystemEntryRecord copyWith({
+    String? id,
+    DateTime? timestamp,
+    String? sessionId,
+    String? systemId,
+    String? historyText,
+  }) {
+    return SystemEntryRecord(
+      id: id ?? this.id,
+      timestamp: timestamp ?? this.timestamp,
+      sessionId: sessionId ?? this.sessionId,
+      systemId: systemId ?? this.systemId,
+      historyText: historyText ?? this.historyText,
     );
   }
 }
@@ -78,6 +143,15 @@ class SessionRecord {
   final int durationMs;
   final int missionsCompleted;
   final int tradesCompleted;
+  
+  // Run summary data (captured at session end)
+  final int? startingCredits;
+  final int? finalCredits;
+  final int? totalFuelUsed;
+  final int? totalCreditsSpentOnFuel;
+  final int? totalCreditsSpentOnGoods;
+  final int? totalCreditsSpentOnUpgrades;
+  final int? totalCreditsEarned;
 
   SessionRecord({
     required this.id,
@@ -86,6 +160,13 @@ class SessionRecord {
     this.durationMs = 0,
     this.missionsCompleted = 0,
     this.tradesCompleted = 0,
+    this.startingCredits,
+    this.finalCredits,
+    this.totalFuelUsed,
+    this.totalCreditsSpentOnFuel,
+    this.totalCreditsSpentOnGoods,
+    this.totalCreditsSpentOnUpgrades,
+    this.totalCreditsEarned,
   });
 
   /// Convert to JSON.
@@ -97,6 +178,13 @@ class SessionRecord {
       'durationMs': durationMs,
       'missionsCompleted': missionsCompleted,
       'tradesCompleted': tradesCompleted,
+      'startingCredits': startingCredits,
+      'finalCredits': finalCredits,
+      'totalFuelUsed': totalFuelUsed,
+      'totalCreditsSpentOnFuel': totalCreditsSpentOnFuel,
+      'totalCreditsSpentOnGoods': totalCreditsSpentOnGoods,
+      'totalCreditsSpentOnUpgrades': totalCreditsSpentOnUpgrades,
+      'totalCreditsEarned': totalCreditsEarned,
     };
   }
 
@@ -111,6 +199,13 @@ class SessionRecord {
       durationMs: json['durationMs'] as int? ?? 0,
       missionsCompleted: json['missionsCompleted'] as int? ?? 0,
       tradesCompleted: json['tradesCompleted'] as int? ?? 0,
+      startingCredits: json['startingCredits'] as int?,
+      finalCredits: json['finalCredits'] as int?,
+      totalFuelUsed: json['totalFuelUsed'] as int?,
+      totalCreditsSpentOnFuel: json['totalCreditsSpentOnFuel'] as int?,
+      totalCreditsSpentOnGoods: json['totalCreditsSpentOnGoods'] as int?,
+      totalCreditsSpentOnUpgrades: json['totalCreditsSpentOnUpgrades'] as int?,
+      totalCreditsEarned: json['totalCreditsEarned'] as int?,
     );
   }
 
@@ -122,6 +217,13 @@ class SessionRecord {
     int? durationMs,
     int? missionsCompleted,
     int? tradesCompleted,
+    int? startingCredits,
+    int? finalCredits,
+    int? totalFuelUsed,
+    int? totalCreditsSpentOnFuel,
+    int? totalCreditsSpentOnGoods,
+    int? totalCreditsSpentOnUpgrades,
+    int? totalCreditsEarned,
   }) {
     return SessionRecord(
       id: id ?? this.id,
@@ -130,6 +232,13 @@ class SessionRecord {
       durationMs: durationMs ?? this.durationMs,
       missionsCompleted: missionsCompleted ?? this.missionsCompleted,
       tradesCompleted: tradesCompleted ?? this.tradesCompleted,
+      startingCredits: startingCredits ?? this.startingCredits,
+      finalCredits: finalCredits ?? this.finalCredits,
+      totalFuelUsed: totalFuelUsed ?? this.totalFuelUsed,
+      totalCreditsSpentOnFuel: totalCreditsSpentOnFuel ?? this.totalCreditsSpentOnFuel,
+      totalCreditsSpentOnGoods: totalCreditsSpentOnGoods ?? this.totalCreditsSpentOnGoods,
+      totalCreditsSpentOnUpgrades: totalCreditsSpentOnUpgrades ?? this.totalCreditsSpentOnUpgrades,
+      totalCreditsEarned: totalCreditsEarned ?? this.totalCreditsEarned,
     );
   }
 }
