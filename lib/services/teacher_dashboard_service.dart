@@ -1,3 +1,8 @@
+// Star Trails™
+// Copyright © 2026 Ubertas Lab, LLC.
+// All Rights Reserved.
+// Unauthorized copying, modification, distribution, or reverse engineering prohibited.
+
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:crypto/crypto.dart';

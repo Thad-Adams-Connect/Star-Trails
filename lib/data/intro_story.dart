@@ -1,3 +1,8 @@
+// Star Trails™
+// Copyright © 2026 Ubertas Lab, LLC.
+// All Rights Reserved.
+// Unauthorized copying, modification, distribution, or reverse engineering prohibited.
+
 /// Intro story for Star Trails - displayed as a typewriter sequence at game start.
 const String introStoryText = 'Year: 2267\n'
 '\n'

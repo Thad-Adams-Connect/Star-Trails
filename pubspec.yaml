@@ -1,7 +1,7 @@
 name: star_trails
-description: Offline educational trading game for 4th graders
+description: Star Trails - Educational space trading adventure for elementary students
 publish_to: 'none'
-version: 0.1.0
+version: 1.0.0+1
 
 environment:
   sdk: '>=3.0.0 <4.0.0'

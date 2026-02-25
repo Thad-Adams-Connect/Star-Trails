@@ -1,3 +1,8 @@
+// Star Trails™
+// Copyright © 2026 Ubertas Lab, LLC.
+// All Rights Reserved.
+// Unauthorized copying, modification, distribution, or reverse engineering prohibited.
+
 /// Represents a ship upgrade tier with its capacity and cost.
 class ShipUpgradeTier {
   final String name; // "Base", "Tier 1", "Tier 2"

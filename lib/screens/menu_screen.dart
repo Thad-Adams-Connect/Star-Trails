@@ -1,3 +1,8 @@
+// Star Trails™
+// Copyright © 2026 Ubertas Lab, LLC.
+// All Rights Reserved.
+// Unauthorized copying, modification, distribution, or reverse engineering prohibited.
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/game_provider.dart';
@@ -101,7 +106,7 @@ class _MenuScreenState extends State<MenuScreen> {
                                   ),
                                   const SizedBox(height: 8),
                                   Text(
-                                    'v0.1',
+                                    'v1.0.0',
                                     style: AppTheme.terminalSubtitle,
                                     textAlign: TextAlign.center,
                                   ),

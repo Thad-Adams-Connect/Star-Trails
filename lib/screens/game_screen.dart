@@ -1,3 +1,8 @@
+// Star Trails™
+// Copyright © 2026 Ubertas Lab, LLC.
+// All Rights Reserved.
+// Unauthorized copying, modification, distribution, or reverse engineering prohibited.
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -491,7 +496,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                     decoration: InputDecoration(
                       border: InputBorder.none,
                       hintText: isIntroActive
-                          ? 'Press SKIP to continue'
+                          ? 'Narrative in progress'
                           : isNarrativeActive
                               ? 'Narrative in progress'
                               : 'Enter command',
@@ -510,17 +515,10 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
               Material(
                 color: Colors.transparent,
                 child: InkWell(
-                  onTap: isNarrativeActive
+                  onTap: (isNarrativeActive || isIntroActive)
                       ? null
                       : () async {
-                          if (isIntroActive) {
-                            provider.skipIntro();
-                            _commandController.clear();
-                            _scrollToBottom();
-                            await provider.saveGame();
-                          } else {
-                            await _sendCommand();
-                          }
+                          await _sendCommand();
                         },
                   borderRadius: BorderRadius.circular(6),
                   child: Container(
@@ -542,7 +540,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                     ),
                     child: Text(
                       isIntroActive
-                          ? 'SKIP'
+                          ? 'WAIT'
                           : isNarrativeActive
                               ? 'WAIT'
                               : 'SEND',

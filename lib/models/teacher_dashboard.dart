@@ -1,3 +1,8 @@
+// Star Trails™
+// Copyright © 2026 Ubertas Lab, LLC.
+// All Rights Reserved.
+// Unauthorized copying, modification, distribution, or reverse engineering prohibited.
+
 /// Models for the Teacher Dashboard data layer.
 /// Tracks device ID, sessions, playtime, and reflection data.
 library;

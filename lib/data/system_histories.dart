@@ -1,3 +1,8 @@
+// Star Trails™
+// Copyright © 2026 Ubertas Lab, LLC.
+// All Rights Reserved.
+// Unauthorized copying, modification, distribution, or reverse engineering prohibited.
+
 /// System history narratives for Inner Ring systems.
 /// These are displayed via terminal typewriter mode on first entry.
 const Map<String, String> innerRingSystemHistories = {

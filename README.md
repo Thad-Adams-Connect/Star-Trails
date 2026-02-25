@@ -1,5 +1,12 @@
 # Star Trails
 
+© 2026 Ubertas Lab, LLC. All rights reserved.
+
+Star Trails™ is proprietary software.
+No part of this software may be reproduced, stored, or transmitted in any form without written permission.
+
+---
+
 Offline educational trading game built with Flutter.
 
 ## How to run
