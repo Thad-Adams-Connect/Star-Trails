@@ -219,7 +219,7 @@ class _TeacherModeScreenState extends State<TeacherModeScreen>
             final session = completedSessions[index];
             final duration = session.durationMs ~/ 1000 ~/ 60;
             final durationSec = (session.durationMs ~/ 1000) % 60;
-            
+
             return Padding(
               padding: const EdgeInsets.only(bottom: 20),
               child: Container(
@@ -250,7 +250,8 @@ class _TeacherModeScreenState extends State<TeacherModeScreen>
                       finalCredits: session.finalCredits,
                       totalFuelUsed: session.totalFuelUsed,
                       totalCreditsSpentOnFuel: session.totalCreditsSpentOnFuel,
-                      totalCreditsSpentOnGoods: session.totalCreditsSpentOnGoods,
+                      totalCreditsSpentOnGoods:
+                          session.totalCreditsSpentOnGoods,
                       totalCreditsSpentOnUpgrades:
                           session.totalCreditsSpentOnUpgrades,
                       totalCreditsEarned: session.totalCreditsEarned,
@@ -359,7 +360,7 @@ class _TeacherModeScreenState extends State<TeacherModeScreen>
           itemCount: sessionGroups.length,
           itemBuilder: (context, index) {
             final group = sessionGroups[index];
-            
+
             return Padding(
               padding: const EdgeInsets.only(bottom: 20),
               child: Container(

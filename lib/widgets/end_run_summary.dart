@@ -53,7 +53,8 @@ class EndRunSummary extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    final actualNetResult = netResult ?? (finalCredits != null ? finalCredits! - 1000 : null);
+    final actualNetResult =
+        netResult ?? (finalCredits != null ? finalCredits! - 1000 : null);
 
     return _buildSummaryCard(
       'RUN SUMMARY',
@@ -67,7 +68,8 @@ class EndRunSummary extends StatelessWidget {
         else
           const _SummaryRow('Final Credits', 'N/A'),
         if (actualNetResult != null)
-          _SummaryRow('Net Result', '$actualNetResult', highlight: actualNetResult >= 0)
+          _SummaryRow('Net Result', '$actualNetResult',
+              highlight: actualNetResult >= 0)
         else
           const _SummaryRow('Net Result', 'N/A'),
         Container(
@@ -90,7 +92,8 @@ class EndRunSummary extends StatelessWidget {
         else
           const _SummaryRow('Credits Spent on Goods', 'N/A'),
         if (totalCreditsSpentOnUpgrades != null)
-          _SummaryRow('Credits Spent on Upgrades', '$totalCreditsSpentOnUpgrades')
+          _SummaryRow(
+              'Credits Spent on Upgrades', '$totalCreditsSpentOnUpgrades')
         else
           const _SummaryRow('Credits Spent on Upgrades', 'N/A'),
         if (totalCreditsEarned != null)

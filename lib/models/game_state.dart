@@ -18,7 +18,7 @@ class GameState {
 
   // Ship upgrades: Map<type, ShipUpgrade> where type is "fuel", "cargo", "computer", "engine"
   final Map<String, ShipUpgrade> shipUpgrades;
-  
+
   // Current ship class
   final String shipClass; // 'CLASS-B' or 'CLASS-C'
 
@@ -27,12 +27,12 @@ class GameState {
   final bool tier2Unlocked; // 10000cr milestone
   final bool tier3Unlocked; // 18000cr milestone
   final bool tier4Unlocked; // 25000cr milestone
-  
+
   // Route exploit control: tracks route usage
   // Key: "SYSTEM_A->SYSTEM_B->COMMODITY" (sorted alphabetically by system)
   // Value: number of times this route has been used
   final Map<String, int> routeUsage;
-  
+
   // Tracks number of different trades since last route usage (for recovery)
   // Key: route identifier (same format as routeUsage)
   // Value: number of different trades since last use
@@ -105,10 +105,10 @@ class GameState {
     this.narrativeCharIndex = 0,
     this.narrativeSystemId = '',
     Map<String, bool>? systemFirstVisit,
-  }) : systemFirstVisit = systemFirstVisit ?? const {},
-       highestCreditsReached = highestCreditsReached ?? credits,
-       routeUsage = routeUsage ?? const {},
-       routeRecoveryCounter = routeRecoveryCounter ?? const {};
+  })  : systemFirstVisit = systemFirstVisit ?? const {},
+        highestCreditsReached = highestCreditsReached ?? credits,
+        routeUsage = routeUsage ?? const {},
+        routeRecoveryCounter = routeRecoveryCounter ?? const {};
 
   factory GameState.initial() {
     final planets = <String, Planet>{};
@@ -167,12 +167,12 @@ class GameState {
   /// Get the current fuel capacity based on ship class and upgrades.
   int getFuelCapacity() {
     final shipSpec = GameConstants.shipSpecs[shipClass]!;
-    
+
     // For CLASS-C, use ship's base capacity (not affected by fuel upgrades)
     if (shipClass == 'CLASS-C') {
       return shipSpec.fuelCapacity;
     }
-    
+
     // For CLASS-B, use upgrade tier capacity
     final fuelUpgrade = shipUpgrades['fuel']!;
     return GameConstants.upgradeTiers[fuelUpgrade.currentTier].capacity;
@@ -181,29 +181,29 @@ class GameState {
   /// Get the current cargo capacity based on ship class and upgrades.
   int getCargoCapacity() {
     final shipSpec = GameConstants.shipSpecs[shipClass]!;
-    
+
     // For CLASS-C, use ship's base capacity (not affected by cargo upgrades)
     if (shipClass == 'CLASS-C') {
       return shipSpec.cargoCapacity;
     }
-    
+
     // For CLASS-B, use upgrade tier capacity
     final cargoUpgrade = shipUpgrades['cargo']!;
     return GameConstants.upgradeTiers[cargoUpgrade.currentTier].capacity;
   }
-  
+
   /// Get the current computer tier, accounting for ship class
   int getComputerTier() {
     // CLASS-C includes Computer T1 and T2 by default
     if (shipClass == 'CLASS-C') {
       return 2;
     }
-    
+
     // Otherwise use upgrade tier
     final computerUpgrade = shipUpgrades['computer'];
     return computerUpgrade?.currentTier ?? 0;
   }
-  
+
   /// Get the current engine tier
   int getEngineTier() {
     final engineUpgrade = shipUpgrades['engine'];
@@ -277,7 +277,8 @@ class GameState {
       tier3Unlocked: tier3Unlocked ?? this.tier3Unlocked,
       tier4Unlocked: tier4Unlocked ?? this.tier4Unlocked,
       routeUsage: routeUsage ?? Map<String, int>.from(this.routeUsage),
-      routeRecoveryCounter: routeRecoveryCounter ?? Map<String, int>.from(this.routeRecoveryCounter),
+      routeRecoveryCounter: routeRecoveryCounter ??
+          Map<String, int>.from(this.routeRecoveryCounter),
       captainName: captainName ?? this.captainName,
       shipName: shipName ?? this.shipName,
       currentSessionId: currentSessionId ?? this.currentSessionId,
@@ -367,7 +368,7 @@ class GameState {
       upgradesMap['fuel'] = ShipUpgrade.initial('fuel');
       upgradesMap['cargo'] = ShipUpgrade.initial('cargo');
     }
-    
+
     // Ensure new upgrade types exist (for saves before they were added)
     if (!upgradesMap.containsKey('computer')) {
       upgradesMap['computer'] = ShipUpgrade.initial('computer');
@@ -382,13 +383,14 @@ class GameState {
       for (final planetId in GameConstants.planetIds)
         planetId: systemFirstVisitJson?[planetId] as bool? ?? true,
     };
-    
+
     final routeUsageJson = json['routeUsage'] as Map<String, dynamic>?;
     final routeUsage = routeUsageJson != null
         ? Map<String, int>.from(routeUsageJson)
         : <String, int>{};
-    
-    final routeRecoveryJson = json['routeRecoveryCounter'] as Map<String, dynamic>?;
+
+    final routeRecoveryJson =
+        json['routeRecoveryCounter'] as Map<String, dynamic>?;
     final routeRecoveryCounter = routeRecoveryJson != null
         ? Map<String, int>.from(routeRecoveryJson)
         : <String, int>{};

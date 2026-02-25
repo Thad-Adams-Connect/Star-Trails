@@ -346,7 +346,7 @@ class GameProvider extends ChangeNotifier {
     _addLog('  buy <item> <qty> - buy items (must be docked)');
     _addLog('  sell <item> <qty> - sell items (must be docked)');
     _addLog('  refuel <qty> - buy fuel (must be docked)');
-    
+
     // Build dynamic upgrade types list based on unlocks
     final upgradeTypes = <String>['fuel', 'cargo'];
     if (GameConstants.isComputerUpgradeUnlocked(_state.credits)) {
@@ -355,9 +355,10 @@ class GameProvider extends ChangeNotifier {
     if (GameConstants.isEngineUpgradeUnlocked(_state.credits)) {
       upgradeTypes.add('engine');
     }
-    _addLog('  upgrade <type> <tier> - upgrade ship (${upgradeTypes.join(", ")})');
+    _addLog(
+        '  upgrade <type> <tier> - upgrade ship (${upgradeTypes.join(", ")})');
     _addLog('  travel <system> - travel to system');
-    
+
     final computerTier = _state.getComputerTier();
     if (computerTier >= 1) {
       _addLog('  trip <system> - show fuel required to destination');
@@ -365,18 +366,20 @@ class GameProvider extends ChangeNotifier {
     if (computerTier >= 2) {
       _addLog('  market <system> - show market at remote system');
     }
-    
-    if (GameConstants.isClassCShipUnlocked(_state.credits) && _state.shipClass == 'CLASS-B') {
+
+    if (GameConstants.isClassCShipUnlocked(_state.credits) &&
+        _state.shipClass == 'CLASS-B') {
       _addLog('  ship buy - purchase CLASS-C ship (at HELIOS REACH)');
     }
-    
+
     _addLog('  end - end current run');
     _addLog('');
-    
+
     // Show only unlocked systems and commodities
     final availableSystems = GameConstants.getAvailableSystems(_state.credits);
-    final availableCommodities = GameConstants.getAvailableCommodities(_state.credits);
-    
+    final availableCommodities =
+        GameConstants.getAvailableCommodities(_state.credits);
+
     _addLog('SYSTEMS: ${availableSystems.join(", ")}');
     _addLog('ITEMS: ${availableCommodities.join(", ")}');
     _addLog('');
@@ -413,27 +416,29 @@ class GameProvider extends ChangeNotifier {
       } else {
         // Computer T2 unlocked, allow remote viewing
         final systemInput = parts.skip(1).join(' ').toUpperCase();
-        
+
         if (!GameConstants.planetIds.contains(systemInput)) {
           _addLog('Unknown system: $systemInput');
-          final availableSystems = GameConstants.getAvailableSystems(_state.credits);
+          final availableSystems =
+              GameConstants.getAvailableSystems(_state.credits);
           _addLog('Available systems: ${availableSystems.join(", ")}');
           return;
         }
-        
+
         // Check if system is unlocked
         if (!GameConstants.isSystemUnlocked(systemInput, _state.credits)) {
           _addLog('System $systemInput is not yet unlocked.');
           return;
         }
-        
+
         // Show remote market
         final planet = _state.planets[systemInput]!;
         _addLog('');
         _addLog('MARKET at $systemInput:');
         _addLog('');
-        
-        final availableCommodities = GameConstants.getAvailableCommodities(_state.credits);
+
+        final availableCommodities =
+            GameConstants.getAvailableCommodities(_state.credits);
         for (var item in availableCommodities) {
           final baseAsk = planet.getAskPrice(item);
           final baseBid = planet.getBidPrice(item);
@@ -454,16 +459,17 @@ class GameProvider extends ChangeNotifier {
     _addLog('');
     _addLog('MARKET at $systemId:');
     _addLog('');
-    
-    final availableCommodities = GameConstants.getAvailableCommodities(_state.credits);
+
+    final availableCommodities =
+        GameConstants.getAvailableCommodities(_state.credits);
     for (var item in availableCommodities) {
       final baseAsk = planet.getAskPrice(item);
       final baseBid = planet.getBidPrice(item);
-      
+
       // Apply route adjustments for current system
       final ask = _getAdjustedPrice(systemId, item, true, baseAsk);
       final bid = _getAdjustedPrice(systemId, item, false, baseBid);
-      
+
       _addLog('  $item: BUY at $ask cr, SELL at $bid cr');
     }
     _addLog('');
@@ -475,8 +481,9 @@ class GameProvider extends ChangeNotifier {
     final cargoCapacity = _state.getCargoCapacity();
     _addLog('');
     _addLog('CARGO (${_state.cargoUsed}/$cargoCapacity):');
-    
-    final availableCommodities = GameConstants.getAvailableCommodities(_state.credits);
+
+    final availableCommodities =
+        GameConstants.getAvailableCommodities(_state.credits);
     for (var item in availableCommodities) {
       final qty = _state.cargo[item]!;
       _addLog('  $item: $qty');
@@ -502,7 +509,7 @@ class GameProvider extends ChangeNotifier {
       _addLog('Unknown item: $itemInput');
       return;
     }
-    
+
     // Check if commodity is unlocked
     if (!GameConstants.isCommodityUnlocked(item, _state.credits)) {
       _addLog('$item is not yet unlocked.');
@@ -524,9 +531,10 @@ class GameProvider extends ChangeNotifier {
 
     final planet = _state.currentPlanet;
     final baseAskPrice = planet.getAskPrice(item);
-    
+
     // Apply route exploit control pricing
-    final askPrice = _getAdjustedPrice(_state.location, item, true, baseAskPrice);
+    final askPrice =
+        _getAdjustedPrice(_state.location, item, true, baseAskPrice);
     final totalCost = askPrice * qty;
 
     if (_state.credits < totalCost) {
@@ -553,7 +561,7 @@ class GameProvider extends ChangeNotifier {
     }
     _addLog('Credits remaining: $newCredits');
     _addLog('');
-    
+
     // Record route usage for exploit control
     _recordRouteUsage(_state.location, item);
 
@@ -581,7 +589,7 @@ class GameProvider extends ChangeNotifier {
       _addLog('Unknown item: $itemInput');
       return;
     }
-    
+
     // Check if commodity is unlocked
     if (!GameConstants.isCommodityUnlocked(item, _state.credits)) {
       _addLog('$item is not yet unlocked.');
@@ -601,9 +609,10 @@ class GameProvider extends ChangeNotifier {
 
     final planet = _state.currentPlanet;
     final baseBidPrice = planet.getBidPrice(item);
-    
+
     // Apply route exploit control pricing
-    final bidPrice = _getAdjustedPrice(_state.location, item, false, baseBidPrice);
+    final bidPrice =
+        _getAdjustedPrice(_state.location, item, false, baseBidPrice);
     final totalEarned = bidPrice * qty;
 
     final newCredits = _state.credits + totalEarned;
@@ -629,10 +638,10 @@ class GameProvider extends ChangeNotifier {
     }
     _addLog('Credits: $newCredits');
     _addLog('');
-    
+
     // Record route usage for exploit control
     _recordRouteUsage(_state.location, item);
-    
+
     // Check and update unlocks based on new credit balance
     _checkAndUpdateUnlocks();
 
@@ -702,22 +711,24 @@ class GameProvider extends ChangeNotifier {
   void _handleTravel(List<String> parts) {
     if (parts.length < 2) {
       _addLog('Usage: travel <planet>');
-      final availableSystems = GameConstants.getAvailableSystems(_state.credits);
+      final availableSystems =
+          GameConstants.getAvailableSystems(_state.credits);
       _addLog('Available systems: ${availableSystems.join(", ")}');
       return;
     }
 
     // Join remaining parts to handle multi-word planet names
     final destInput = parts.skip(1).join(' ').toUpperCase();
-    
+
     // Check if system exists
     if (!GameConstants.planetIds.contains(destInput)) {
       _addLog('Unknown planet: $destInput');
-      final availableSystems = GameConstants.getAvailableSystems(_state.credits);
+      final availableSystems =
+          GameConstants.getAvailableSystems(_state.credits);
       _addLog('Available systems: ${availableSystems.join(", ")}');
       return;
     }
-    
+
     // Check if system is unlocked
     if (!GameConstants.isSystemUnlocked(destInput, _state.credits)) {
       _addLog('System $destInput is not yet unlocked.');
@@ -732,8 +743,9 @@ class GameProvider extends ChangeNotifier {
 
     // Calculate fuel cost with engine upgrades applied
     final engineTier = _state.getEngineTier();
-    final fuelCost = GameConstants.calculateFuelCost(_state.location, destInput, engineTier);
-    
+    final fuelCost =
+        GameConstants.calculateFuelCost(_state.location, destInput, engineTier);
+
     if (_state.fuel < fuelCost) {
       _addLog('Not enough fuel. Need: $fuelCost, Have: ${_state.fuel}');
       return;
@@ -770,7 +782,7 @@ class GameProvider extends ChangeNotifier {
   void _handleUpgrade(List<String> parts) {
     if (parts.length < 3) {
       _addLog('Usage: upgrade <type> <tier>');
-      
+
       // Build list of available upgrade types based on unlocks
       final availableTypes = <String>['fuel', 'cargo'];
       if (GameConstants.isComputerUpgradeUnlocked(_state.credits)) {
@@ -779,7 +791,7 @@ class GameProvider extends ChangeNotifier {
       if (GameConstants.isEngineUpgradeUnlocked(_state.credits)) {
         availableTypes.add('engine');
       }
-      
+
       _addLog('Types: ${availableTypes.join(", ")}');
       _addLog('Tiers: 0 (Base), 1 (Tier 1), 2 (Tier 2)');
       _addLog('');
@@ -798,7 +810,7 @@ class GameProvider extends ChangeNotifier {
     if (GameConstants.isEngineUpgradeUnlocked(_state.credits)) {
       validTypes.add('engine');
     }
-    
+
     // Validate upgrade type
     if (!validTypes.contains(typeInput)) {
       _addLog('Unknown upgrade type: $typeInput');
@@ -815,14 +827,15 @@ class GameProvider extends ChangeNotifier {
       _addLog('Upgrades are only available at HELIOS REACH.');
       return;
     }
-    
+
     // Check if upgrading CLASS-C ship (which can't upgrade fuel/cargo)
-    if (_state.shipClass == 'CLASS-C' && (typeInput == 'fuel' || typeInput == 'cargo')) {
+    if (_state.shipClass == 'CLASS-C' &&
+        (typeInput == 'fuel' || typeInput == 'cargo')) {
       _addLog('CLASS-C ship has fixed fuel and cargo capacity.');
       _addLog('Fuel and Cargo upgrades are not available for this ship class.');
       return;
     }
-    
+
     // Check if upgrading CLASS-C ship's computer (already has T1+T2)
     if (_state.shipClass == 'CLASS-C' && typeInput == 'computer') {
       _addLog('CLASS-C ship includes Computer T1 and T2 by default.');
@@ -864,7 +877,7 @@ class GameProvider extends ChangeNotifier {
 
     _addLog('');
     _addLog('Upgraded $typeInput to Tier $tierInput!');
-    
+
     // Show type-specific upgrade benefit
     if (typeInput == 'fuel' || typeInput == 'cargo') {
       final capacity = GameConstants.upgradeTiers[tierInput].capacity;
@@ -879,7 +892,7 @@ class GameProvider extends ChangeNotifier {
     } else if (typeInput == 'engine') {
       _addLog(GameConstants.engineUpgradeDescriptions[tierInput]!);
     }
-    
+
     _addLog('Credits: $newCredits');
     _addLog('');
 
@@ -892,13 +905,14 @@ class GameProvider extends ChangeNotifier {
     _addLog('SHIP: ${_state.shipClass}');
     _addLog('');
     _addLog('SHIP UPGRADES:');
-    
+
     // Show fuel and cargo for CLASS-B
     if (_state.shipClass == 'CLASS-B') {
       for (final upgradeType in ['fuel', 'cargo']) {
         final upgrade = _state.shipUpgrades[upgradeType]!;
         final tierName = GameConstants.upgradeTiers[upgrade.currentTier].name;
-        final capacity = GameConstants.upgradeTiers[upgrade.currentTier].capacity;
+        final capacity =
+            GameConstants.upgradeTiers[upgrade.currentTier].capacity;
         _addLog('  $upgradeType: $tierName ($capacity capacity)');
 
         if (upgrade.currentTier < 2) {
@@ -906,7 +920,8 @@ class GameProvider extends ChangeNotifier {
           final nextTierName = GameConstants.upgradeTiers[nextTier].name;
           final nextCapacity = GameConstants.upgradeTiers[nextTier].capacity;
           final nextCost = GameConstants.getUpgradeCost(upgradeType, nextTier);
-          _addLog('    -> $nextTierName ($nextCapacity capacity): $nextCost cr');
+          _addLog(
+              '    -> $nextTierName ($nextCapacity capacity): $nextCost cr');
         }
       }
     } else {
@@ -915,27 +930,29 @@ class GameProvider extends ChangeNotifier {
       _addLog('  fuel: Fixed (${shipSpec.fuelCapacity} capacity)');
       _addLog('  cargo: Fixed (${shipSpec.cargoCapacity} capacity)');
     }
-    
+
     // Show computer upgrades only if unlocked
     if (GameConstants.isComputerUpgradeUnlocked(_state.credits)) {
       final computerTier = _state.getComputerTier();
       _addLog('  computer: Tier $computerTier');
-      _addLog('    ${GameConstants.computerUpgradeDescriptions[computerTier]!}');
-      
+      _addLog(
+          '    ${GameConstants.computerUpgradeDescriptions[computerTier]!}');
+
       if (_state.shipClass != 'CLASS-C' && computerTier < 2) {
         final nextTier = computerTier + 1;
         final nextCost = GameConstants.getUpgradeCost('computer', nextTier);
         _addLog('    -> Tier $nextTier: $nextCost cr');
-        _addLog('       ${GameConstants.computerUpgradeDescriptions[nextTier]!}');
+        _addLog(
+            '       ${GameConstants.computerUpgradeDescriptions[nextTier]!}');
       }
     }
-    
+
     // Show engine upgrades only if unlocked
     if (GameConstants.isEngineUpgradeUnlocked(_state.credits)) {
       final engineTier = _state.getEngineTier();
       _addLog('  engine: Tier $engineTier');
       _addLog('    ${GameConstants.engineUpgradeDescriptions[engineTier]!}');
-      
+
       if (engineTier < 2) {
         final nextTier = engineTier + 1;
         final nextCost = GameConstants.getUpgradeCost('engine', nextTier);
@@ -943,7 +960,7 @@ class GameProvider extends ChangeNotifier {
         _addLog('       ${GameConstants.engineUpgradeDescriptions[nextTier]!}');
       }
     }
-    
+
     _addLog('');
   }
 
@@ -1076,8 +1093,7 @@ class GameProvider extends ChangeNotifier {
     _scheduleNextIntroCharacter();
   }
 
-  void _scheduleNextIntroCharacter(
-      [Duration delay = _introCharDelay]) {
+  void _scheduleNextIntroCharacter([Duration delay = _introCharDelay]) {
     _introTimer = Timer(delay, () {
       if (!isIntroActive) {
         _introTimer?.cancel();
@@ -1236,8 +1252,7 @@ class GameProvider extends ChangeNotifier {
     _scheduleNextNarrativeCharacter();
   }
 
-  void _scheduleNextNarrativeCharacter(
-      [Duration delay = _introCharDelay]) {
+  void _scheduleNextNarrativeCharacter([Duration delay = _introCharDelay]) {
     _narrativeTimer = Timer(delay, () {
       if (!isNarrativeActive) {
         _narrativeTimer?.cancel();
@@ -1339,7 +1354,7 @@ class GameProvider extends ChangeNotifier {
 
     // Check both Inner Ring and outer system histories
     final hasHistory = innerRingSystemHistories.containsKey(normalized) ||
-                      outerSystemHistories.containsKey(normalized);
+        outerSystemHistories.containsKey(normalized);
     if (!hasHistory) {
       return;
     }
@@ -1364,7 +1379,8 @@ class GameProvider extends ChangeNotifier {
 
   void _startSystemHistoryNarrative(String systemId) {
     // Check both Inner Ring and outer system histories
-    final historyText = innerRingSystemHistories[systemId] ?? outerSystemHistories[systemId];
+    final historyText =
+        innerRingSystemHistories[systemId] ?? outerSystemHistories[systemId];
     if (historyText == null || historyText.isEmpty) {
       return;
     }
@@ -1477,7 +1493,7 @@ class GameProvider extends ChangeNotifier {
         _canTravelAnywhere() ||
         _canUpgradeAnything();
   }
-  
+
   /// Check and update unlock flags based on current credit balance
   void _checkAndUpdateUnlocks() {
     final currentCredits = _state.credits;
@@ -1486,7 +1502,7 @@ class GameProvider extends ChangeNotifier {
     bool tier2 = _state.tier2Unlocked;
     bool tier3 = _state.tier3Unlocked;
     bool tier4 = _state.tier4Unlocked;
-    
+
     // Check each tier - once unlocked, stays unlocked
     if (!tier1 && currentCredits >= GameConstants.unlockTier1Credits) {
       tier1 = true;
@@ -1504,12 +1520,14 @@ class GameProvider extends ChangeNotifier {
       _addLog('');
       _addLog('NEW UPGRADE PATH:');
       _addLog('  • Computer (use "upgrade computer <tier>")');
-      _addLog('    - Tier 1: TRIP command (${GameConstants.upgradeCosts['computer']![1]} cr)');
-      _addLog('    - Tier 2: MARKET command (${GameConstants.upgradeCosts['computer']![2]} cr)');
+      _addLog(
+          '    - Tier 1: TRIP command (${GameConstants.upgradeCosts['computer']![1]} cr)');
+      _addLog(
+          '    - Tier 2: MARKET command (${GameConstants.upgradeCosts['computer']![2]} cr)');
       _addLog('════════════════════════════');
       _addLog('');
     }
-    
+
     if (!tier2 && currentCredits >= GameConstants.unlockTier2Credits) {
       tier2 = true;
       updated = true;
@@ -1526,12 +1544,14 @@ class GameProvider extends ChangeNotifier {
       _addLog('');
       _addLog('NEW UPGRADE PATH:');
       _addLog('  • Engine (use "upgrade engine <tier>")');
-      _addLog('    - Tier 1: -1 fuel per trip (${GameConstants.upgradeCosts['engine']![1]} cr)');
-      _addLog('    - Tier 2: -2 fuel per trip (${GameConstants.upgradeCosts['engine']![2]} cr)');
+      _addLog(
+          '    - Tier 1: -1 fuel per trip (${GameConstants.upgradeCosts['engine']![1]} cr)');
+      _addLog(
+          '    - Tier 2: -2 fuel per trip (${GameConstants.upgradeCosts['engine']![2]} cr)');
       _addLog('════════════════════════════');
       _addLog('');
     }
-    
+
     if (!tier3 && currentCredits >= GameConstants.unlockTier3Credits) {
       tier3 = true;
       updated = true;
@@ -1553,7 +1573,7 @@ class GameProvider extends ChangeNotifier {
       _addLog('════════════════════════════');
       _addLog('');
     }
-    
+
     if (!tier4 && currentCredits >= GameConstants.unlockTier4Credits) {
       tier4 = true;
       updated = true;
@@ -1569,85 +1589,94 @@ class GameProvider extends ChangeNotifier {
       _addLog('════════════════════════════');
       _addLog('');
     }
-    
+
     if (updated) {
-      _updateState(_state.copyWith(
-        tier1Unlocked: tier1,
-        tier2Unlocked: tier2,
-        tier3Unlocked: tier3,
-        tier4Unlocked: tier4,
-      ), notify: false);
+      _updateState(
+          _state.copyWith(
+            tier1Unlocked: tier1,
+            tier2Unlocked: tier2,
+            tier3Unlocked: tier3,
+            tier4Unlocked: tier4,
+          ),
+          notify: false);
     }
   }
-  
+
   /// Track route usage for exploit control
   /// Returns adjusted price (may be modified from base price)
-  int _getAdjustedPrice(String system, String commodity, bool isBuying, int basePrice) {
+  int _getAdjustedPrice(
+      String system, String commodity, bool isBuying, int basePrice) {
     // Create route identifier (sorted alphabetically)
     final routeKey = _makeRouteKey(system, commodity);
-    
+
     final usageCount = _state.routeUsage[routeKey] ?? 0;
-    
+
     // First few uses: no price impact
     if (usageCount < GameConstants.routeFreeUses) {
       return basePrice;
     }
-    
+
     // After that, every N additional executions: ±X% price change
     final excessUses = usageCount - (GameConstants.routeFreeUses - 1);
     final priceAdjustments = excessUses ~/ GameConstants.routeUsesPerAdjustment;
-    
+
     if (priceAdjustments <= 0) {
       return basePrice;
     }
-    
+
     // Calculate cumulative percentage changes
     double adjustedPrice = basePrice.toDouble();
-    final adjustmentMultiplier = 1.0 + (isBuying ? GameConstants.routePriceAdjustmentPercent : -GameConstants.routePriceAdjustmentPercent);
-    
+    final adjustmentMultiplier = 1.0 +
+        (isBuying
+            ? GameConstants.routePriceAdjustmentPercent
+            : -GameConstants.routePriceAdjustmentPercent);
+
     for (int i = 0; i < priceAdjustments; i++) {
       adjustedPrice *= adjustmentMultiplier;
     }
-    
+
     return adjustedPrice.round();
   }
-  
+
   /// Record a trade on a route
   void _recordRouteUsage(String system, String commodity) {
     final routeKey = _makeRouteKey(system, commodity);
-    
+
     final newUsage = Map<String, int>.from(_state.routeUsage);
     newUsage[routeKey] = (newUsage[routeKey] ?? 0) + 1;
-    
+
     // Reset recovery counter for this route
     final newRecovery = Map<String, int>.from(_state.routeRecoveryCounter);
     newRecovery[routeKey] = 0;
-    
+
     // Increment recovery counters for all OTHER routes
     for (final key in newRecovery.keys) {
       if (key != routeKey) {
         newRecovery[key] = (newRecovery[key] ?? 0) + 1;
-        
+
         // If a route hasn't been used for N different trades, recover some uses
         if (newRecovery[key]! >= GameConstants.routeRecoveryThreshold) {
           newRecovery[key] = 0;
           if (newUsage.containsKey(key) && newUsage[key]! > 0) {
-            newUsage[key] = (newUsage[key]! - GameConstants.routeRecoveryAmount).clamp(0, 999);
+            newUsage[key] = (newUsage[key]! - GameConstants.routeRecoveryAmount)
+                .clamp(0, 999);
           }
         }
       }
     }
-    
-    _updateState(_state.copyWith(
-      routeUsage: newUsage,
-      routeRecoveryCounter: newRecovery,
-    ), notify: false);
+
+    _updateState(
+        _state.copyWith(
+          routeUsage: newUsage,
+          routeRecoveryCounter: newRecovery,
+        ),
+        notify: false);
   }
-  
+
   String _makeRouteKey(String system, String commodity) {
     return '$system->$commodity';
   }
-  
+
   void _handleTrip(List<String> parts) {
     // Requires Computer T1 or higher
     final computerTier = _state.getComputerTier();
@@ -1656,36 +1685,39 @@ class GameProvider extends ChangeNotifier {
       _addLog('Upgrade your computer system to access this feature.');
       return;
     }
-    
+
     if (parts.length < 2) {
       _addLog('Usage: trip <system>');
-      final availableSystems = GameConstants.getAvailableSystems(_state.credits);
+      final availableSystems =
+          GameConstants.getAvailableSystems(_state.credits);
       _addLog('Available systems: ${availableSystems.join(", ")}');
       return;
     }
-    
+
     final destInput = parts.skip(1).join(' ').toUpperCase();
-    
+
     if (!GameConstants.planetIds.contains(destInput)) {
       _addLog('Unknown system: $destInput');
-      final availableSystems = GameConstants.getAvailableSystems(_state.credits);
+      final availableSystems =
+          GameConstants.getAvailableSystems(_state.credits);
       _addLog('Available systems: ${availableSystems.join(", ")}');
       return;
     }
-    
+
     if (!GameConstants.isSystemUnlocked(destInput, _state.credits)) {
       _addLog('System $destInput is not yet unlocked.');
       return;
     }
-    
+
     if (destInput == _state.location) {
       _addLog('You are already at $destInput.');
       return;
     }
-    
+
     final engineTier = _state.getEngineTier();
-    final fuelCost = GameConstants.calculateFuelCost(_state.location, destInput, engineTier);
-    
+    final fuelCost =
+        GameConstants.calculateFuelCost(_state.location, destInput, engineTier);
+
     _addLog('');
     _addLog('TRIP CALCULATION:');
     _addLog('From: ${_state.location}');
@@ -1693,7 +1725,8 @@ class GameProvider extends ChangeNotifier {
     _addLog('Fuel required: $fuelCost');
     if (engineTier > 0) {
       final baseCost = GameConstants.travelCosts[_state.location]![destInput]!;
-      _addLog('(Base cost: $baseCost, reduced by $engineTier with engine upgrade)');
+      _addLog(
+          '(Base cost: $baseCost, reduced by $engineTier with engine upgrade)');
     }
     _addLog('Current fuel: ${_state.fuel}');
     if (_state.fuel >= fuelCost) {
@@ -1704,7 +1737,7 @@ class GameProvider extends ChangeNotifier {
     }
     _addLog('');
   }
-  
+
   void _handleShip(List<String> parts) {
     if (parts.length < 2) {
       // Show current ship info
@@ -1714,8 +1747,9 @@ class GameProvider extends ChangeNotifier {
       _addLog(shipSpec.description);
       _addLog('Fuel Capacity: ${shipSpec.fuelCapacity}');
       _addLog('Cargo Capacity: ${shipSpec.cargoCapacity}');
-      
-      if (_state.shipClass == 'CLASS-B' && GameConstants.isClassCShipUnlocked(_state.credits)) {
+
+      if (_state.shipClass == 'CLASS-B' &&
+          GameConstants.isClassCShipUnlocked(_state.credits)) {
         _addLog('');
         _addLog('AVAILABLE FOR PURCHASE:');
         final classCSpec = GameConstants.shipSpecs['CLASS-C']!;
@@ -1729,59 +1763,64 @@ class GameProvider extends ChangeNotifier {
       _addLog('');
       return;
     }
-    
+
     final action = parts[1].toLowerCase();
-    
+
     if (action == 'buy') {
       // Purchase CLASS-C ship
       if (!GameConstants.isClassCShipUnlocked(_state.credits)) {
-        _addLog('CLASS-C ship unlocks at ${GameConstants.unlockTier3Credits} credits.');
+        _addLog(
+            'CLASS-C ship unlocks at ${GameConstants.unlockTier3Credits} credits.');
         return;
       }
-      
+
       if (_state.shipClass == 'CLASS-C') {
         _addLog('You already own a CLASS-C ship.');
         return;
       }
-      
+
       if (_state.location != 'HELIOS REACH') {
         _addLog('Ships can only be purchased at HELIOS REACH.');
         return;
       }
-      
+
       final classCSpec = GameConstants.shipSpecs['CLASS-C']!;
       final classBSpec = GameConstants.shipSpecs['CLASS-B']!;
-      
+
       // Cost is purchase price minus resale of current ship (which is 0 for CLASS-B)
       final netCost = classCSpec.baseCost - classBSpec.resaleValue;
-      
+
       if (_state.credits < netCost) {
         _addLog('Not enough credits. Need: $netCost, Have: ${_state.credits}');
         return;
       }
-      
+
       // Check if cargo would overflow
       if (_state.cargoUsed > classCSpec.cargoCapacity) {
-        _addLog('Cannot switch ships: current cargo (${_state.cargoUsed}) exceeds CLASS-C capacity (${classCSpec.cargoCapacity}).');
+        _addLog(
+            'Cannot switch ships: current cargo (${_state.cargoUsed}) exceeds CLASS-C capacity (${classCSpec.cargoCapacity}).');
         _addLog('Sell some cargo before purchasing.');
         return;
       }
-      
+
       final newCredits = _state.credits - netCost;
       final newFuel = _state.fuel.clamp(0, classCSpec.fuelCapacity);
-      
+
       // CLASS-C includes Computer T1+T2 by default
       final newUpgrades = Map<String, ShipUpgrade>.from(_state.shipUpgrades);
       newUpgrades['computer'] = ShipUpgrade(type: 'computer', currentTier: 2);
-      
-      _updateState(_state.copyWith(
-        shipClass: 'CLASS-C',
-        fuel: newFuel,
-        credits: newCredits,
-        shipUpgrades: newUpgrades,
-        totalCreditsSpentOnUpgrades: _state.totalCreditsSpentOnUpgrades + netCost,
-      ), notify: false);
-      
+
+      _updateState(
+          _state.copyWith(
+            shipClass: 'CLASS-C',
+            fuel: newFuel,
+            credits: newCredits,
+            shipUpgrades: newUpgrades,
+            totalCreditsSpentOnUpgrades:
+                _state.totalCreditsSpentOnUpgrades + netCost,
+          ),
+          notify: false);
+
       _addLog('');
       _addLog('═══════════════════════════');
       _addLog('SHIP PURCHASE COMPLETE');
@@ -1794,7 +1833,7 @@ class GameProvider extends ChangeNotifier {
       _addLog('Credits remaining: $newCredits');
       _addLog('═══════════════════════════');
       _addLog('');
-      
+
       _maybeShowEduPrompt(
           'You upgraded to a CLASS-C ship! This powerful vessel gives you more capacity and includes advanced computer systems.');
     } else {

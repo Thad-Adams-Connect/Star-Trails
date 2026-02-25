@@ -86,8 +86,7 @@ class SettingsScreen extends StatelessWidget {
                                       context,
                                       icon: Icons.person_outline,
                                       title: 'Edit Identity',
-                                      subtitle:
-                                          'Change captain and ship name',
+                                      subtitle: 'Change captain and ship name',
                                       onTap: () async {
                                         await Navigator.of(context).push(
                                           pixelRoute(

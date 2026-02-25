@@ -395,7 +395,8 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                         label: 'FUEL', value: '${state.fuel}/$fuelCapacity'),
                     _HeaderItem(label: 'CR', value: '${state.credits}'),
                     _HeaderItem(
-                        label: 'CARGO', value: '${state.cargoUsed}/$cargoCapacity'),
+                        label: 'CARGO',
+                        value: '${state.cargoUsed}/$cargoCapacity'),
                   ],
                 ),
               ),
