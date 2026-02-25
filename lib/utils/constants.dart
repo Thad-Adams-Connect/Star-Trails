@@ -534,23 +534,29 @@ class GameConstants {
 
   static bool isSystemUnlocked(String systemId, int currentCredits) {
     if (innerRingPlanetIds.contains(systemId)) return true;
-    if (tier1PlanetIds.contains(systemId))
+    if (tier1PlanetIds.contains(systemId)) {
       return isTier1Unlocked(currentCredits);
-    if (tier2PlanetIds.contains(systemId))
+    }
+    if (tier2PlanetIds.contains(systemId)) {
       return isTier2Unlocked(currentCredits);
-    if (tier3PlanetIds.contains(systemId))
+    }
+    if (tier3PlanetIds.contains(systemId)) {
       return isTier3Unlocked(currentCredits);
-    if (tier4PlanetIds.contains(systemId))
+    }
+    if (tier4PlanetIds.contains(systemId)) {
       return isTier4Unlocked(currentCredits);
+    }
     return false;
   }
 
   static bool isCommodityUnlocked(String commodityId, int currentCredits) {
     if (baseCommodityIds.contains(commodityId)) return true;
-    if (tier1CommodityIds.contains(commodityId))
+    if (tier1CommodityIds.contains(commodityId)) {
       return isTier1Unlocked(currentCredits);
-    if (tier2CommodityIds.contains(commodityId))
+    }
+    if (tier2CommodityIds.contains(commodityId)) {
       return isTier2Unlocked(currentCredits);
+    }
     return false;
   }
 
