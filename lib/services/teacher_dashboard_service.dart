@@ -186,6 +186,27 @@ class TeacherDashboardService {
     return _data;
   }
 
+  /// Add a wisdom display record.
+  Future<TeacherDashboardData> addWisdomEntry({
+    required String text,
+    required String gradeTier,
+  }) async {
+    await _ensureInitialized();
+    final entry = WisdomDisplayRecord(
+      id: _generateUniqueId(),
+      timestamp: DateTime.now(),
+      text: text,
+      gradeTier: gradeTier,
+    );
+    final updatedEntries = [..._data.wisdomEntries, entry];
+    _data = _data.copyWith(wisdomEntries: updatedEntries);
+    await _save();
+    return _data;
+  }
+
+  /// Get all wisdom entries.
+  List<WisdomDisplayRecord> getWisdomEntries() => _data.wisdomEntries;
+
   /// Get all reflection records.
   List<ReflectionRecord> getReflections() => _data.reflections;
 

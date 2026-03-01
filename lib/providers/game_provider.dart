@@ -11,9 +11,11 @@ import '../models/ship_upgrade.dart';
 import '../models/cr_access_state.dart';
 import '../services/persistence_service.dart';
 import '../services/teacher_dashboard_service.dart';
+import '../services/wisdom_engine.dart';
 import '../utils/constants.dart';
 import '../data/intro_story.dart';
 import '../data/system_histories.dart';
+import '../data/wisdom_entries.dart';
 
 class GameProvider extends ChangeNotifier {
   static const Duration _introCharDelay = Duration(milliseconds: 80);
@@ -34,9 +36,13 @@ class GameProvider extends ChangeNotifier {
   GameState _state = GameState.initial();
   final PersistenceService _persistence = PersistenceService();
   final TeacherDashboardService _dashboard = TeacherDashboardService();
+  final WisdomEngine _wisdomEngine = WisdomEngine();
+  final StreamController<WisdomEntry> _wisdomStreamController = 
+      StreamController<WisdomEntry>.broadcast();
   bool _sessionIsGameOver = false;
   bool _eduPromptsEnabled = true;
   bool _reflectionEnabled = true;
+  bool _wisdomEnabled = true;
   double _narrativeTextSpeedMultiplier = _defaultNarrativeSpeed;
   bool _showEduPrompt = false;
   String _currentEduPrompt = '';
@@ -52,10 +58,13 @@ class GameProvider extends ChangeNotifier {
   GameState get state => _state;
   bool get eduPromptsEnabled => _eduPromptsEnabled;
   bool get reflectionEnabled => _reflectionEnabled;
+  bool get wisdomEnabled => _wisdomEnabled;
   double get narrativeTextSpeedMultiplier => _narrativeTextSpeedMultiplier;
   bool get showEduPrompt => _showEduPrompt;
   String get currentEduPrompt => _currentEduPrompt;
   TeacherDashboardService get dashboard => _dashboard;
+  WisdomEngine get wisdomEngine => _wisdomEngine;
+  Stream<WisdomEntry> get wisdomStream => _wisdomStreamController.stream;
   bool get sessionIsGameOver => _sessionIsGameOver;
   bool get isNarrativeActive => _state.isNarrativeActive;
 
@@ -90,12 +99,14 @@ class GameProvider extends ChangeNotifier {
     _narrativeTimer = null;
     _saveThrottleTimer?.cancel();
     _saveThrottleTimer = null;
+    _wisdomStreamController.close();
     super.dispose();
   }
 
   Future<void> loadSettings() async {
     _eduPromptsEnabled = await _persistence.getEduPromptsEnabled();
     _reflectionEnabled = await _persistence.getReflectionEnabled();
+    _wisdomEnabled = await _persistence.getWisdomEnabled();
     _narrativeTextSpeedMultiplier = _normalizeNarrativeSpeed(
       await _persistence.getNarrativeTextSpeedMultiplier(),
     );
@@ -111,6 +122,12 @@ class GameProvider extends ChangeNotifier {
   Future<void> setReflectionEnabled(bool enabled) async {
     _reflectionEnabled = enabled;
     await _persistence.setReflectionEnabled(enabled);
+    notifyListeners();
+  }
+
+  Future<void> setWisdomEnabled(bool enabled) async {
+    _wisdomEnabled = enabled;
+    await _persistence.setWisdomEnabled(enabled);
     notifyListeners();
   }
 
@@ -132,6 +149,31 @@ class GameProvider extends ChangeNotifier {
       _currentEduPrompt = prompt;
       _showEduPrompt = true;
       notifyListeners();
+    }
+  }
+
+  /// Trigger wisdom based on gameplay context.
+  /// Emits wisdom on stream if one should be shown.
+  void _triggerWisdom(List<String> contextTags) {
+    if (!_wisdomEnabled) return;
+    if (!_wisdomEngine.canShowWisdom(minMinutesBetween: 3)) return;
+    
+    final wisdom = _wisdomEngine.selectWisdom(contextTags);
+    if (wisdom != null) {
+      _wisdomStreamController.add(wisdom);
+    }
+  }
+
+  /// Mark wisdom as shown and optionally save to logbook.
+  void markWisdomShown(WisdomEntry wisdom, {bool savedToLogbook = false}) {
+    _wisdomEngine.markWisdomShown(wisdom, savedToLogbook: savedToLogbook);
+    
+    // Save to dashboard if requested
+    if (savedToLogbook) {
+      unawaited(_dashboard.addWisdomEntry(
+        text: wisdom.text,
+        gradeTier: '4-6', // Currently hardcoded to 4-6
+      ));
     }
   }
 
@@ -584,6 +626,9 @@ class GameProvider extends ChangeNotifier {
 
     unawaited(_dashboard.recordTradeCompleted());
 
+    // Trigger wisdom for buying (preparation/planning)
+    _triggerWisdom(['trade', 'commerce', 'preparation', 'planning']);
+
     _maybeShowEduPrompt(
         'You bought $item at $askPrice credits each. Can you find a planet where you can sell it for more?');
   }
@@ -663,6 +708,18 @@ class GameProvider extends ChangeNotifier {
     _checkAndUpdateUnlocks();
 
     unawaited(_dashboard.recordTradeCompleted());
+
+    // Trigger wisdom for trade completion
+    // Determine if this was a profitable trade based on earned amount
+    final wisdomTags = <String>['trade', 'commerce'];
+    if (totalEarned >= 200) {
+      // Significant profit
+      wisdomTags.addAll(['win', 'success', 'profit']);
+    } else if (totalEarned < 50) {
+      // Low profit - maybe a loss
+      wisdomTags.addAll(['loss', 'learning']);
+    }
+    _triggerWisdom(wisdomTags);
 
     _maybeShowEduPrompt(
         'Selling items decreases demand. If you sell more of the same item here, you might get less for it next time!');
@@ -791,6 +848,14 @@ class GameProvider extends ChangeNotifier {
     _addLog(_state.currentPlanet.getDescription());
     _addLog('');
 
+    // Trigger wisdom for travel (planning/efficiency)
+    final wisdomTags = <String>['preparation', 'planning'];
+    if (newFuel < _state.getFuelCapacity() * 0.3) {
+      // Low fuel warning
+      wisdomTags.addAll(['risk', 'warning', 'fuel']);
+    }
+    _triggerWisdom(wisdomTags);
+
     _maybeShowEduPrompt(
         'Traveling uses fuel and restores demand at your destination. Plan your route to maximize profit!');
     _queueSystemHistoryIfFirstVisit(destInput);
@@ -912,6 +977,9 @@ class GameProvider extends ChangeNotifier {
 
     _addLog('Credits: $newCredits');
     _addLog('');
+
+    // Trigger wisdom for upgrade (investment/improvement)
+    _triggerWisdom(['upgrade', 'investment', 'improvement', 'preparation']);
 
     _maybeShowEduPrompt(
         'You upgraded your ship! Higher capacity helps you carry more and travel further.');
@@ -1255,6 +1323,18 @@ class GameProvider extends ChangeNotifier {
         notify: false);
     _addLog('');
 
+    // Trigger the first wisdom after intro completes
+    Future<void>.delayed(const Duration(milliseconds: 500), () {
+      final firstWisdom = grade4to6Wisdom.firstWhere(
+        (w) => w.id == 'win_planning',
+        orElse: () => grade4to6Wisdom.first,
+      );
+      if (_wisdomEnabled) {
+        _wisdomStreamController.add(firstWisdom);
+        _wisdomEngine.markWisdomShown(firstWisdom, savedToLogbook: false);
+      }
+    });
+
     // Ensure final intro state is saved
     saveGame();
   }
@@ -1347,6 +1427,7 @@ class GameProvider extends ChangeNotifier {
 
   void _completeSystemHistoryNarrative() {
     final systemId = _state.narrativeSystemId;
+    final narrativeText = _state.currentNarrativeText;
 
     final updatedFirstVisit = Map<String, bool>.from(_state.systemFirstVisit);
     if (systemId.isNotEmpty) {
@@ -1358,6 +1439,7 @@ class GameProvider extends ChangeNotifier {
           isNarrativeActive: false,
           narrativeCharIndex: 0,
           narrativeSystemId: '',
+          currentNarrativeText: '',
           systemFirstVisit: updatedFirstVisit,
         ),
         notify: false);
@@ -1370,12 +1452,15 @@ class GameProvider extends ChangeNotifier {
         unawaited(_dashboard.addSystemEntry(
           sessionId: sessionId,
           systemId: systemId,
-          historyText: 'System Entered',
+          historyText: narrativeText.isNotEmpty ? narrativeText : 'System Entered',
         ));
       }
     }
 
     saveGame();
+    
+    // Trigger rebuild for Logbook to update history display
+    notifyListeners();
   }
 
   void _queueSystemHistoryIfFirstVisit(String systemId) {
@@ -1425,6 +1510,7 @@ class GameProvider extends ChangeNotifier {
           isNarrativeActive: true,
           narrativeCharIndex: 0,
           narrativeSystemId: systemId,
+          currentNarrativeText: historyText,
         ),
         notify: true);
     _scheduleNextNarrativeCharacter(_scaledTypewriterDelay(_introCharDelay));

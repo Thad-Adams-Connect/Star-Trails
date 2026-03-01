@@ -103,6 +103,4 @@ const String introStoryText = 'Year: 2267\n'
     'C) Study prices first — don’t buy yet\n'
     '\n'
     'Choose carefully.\n'
-    'Small decisions build great journeys.\n'
-    '\n'
-    '“Good planning and hard work lead to prosperity.” — Words of Wisdom\n';
+    'Small decisions build great journeys.\n';

@@ -15,6 +15,7 @@ class TeacherDashboardData {
   final List<SessionRecord> sessions;
   final List<ReflectionRecord> reflections;
   final List<SystemEntryRecord> systemEntries;
+  final List<WisdomDisplayRecord> wisdomEntries;
 
   TeacherDashboardData({
     required this.deviceId,
@@ -24,6 +25,7 @@ class TeacherDashboardData {
     this.sessions = const [],
     this.reflections = const [],
     this.systemEntries = const [],
+    this.wisdomEntries = const [],
   });
 
   /// Convert to JSON for persistence.
@@ -36,6 +38,7 @@ class TeacherDashboardData {
       'sessions': sessions.map((s) => s.toJson()).toList(),
       'reflections': reflections.map((r) => r.toJson()).toList(),
       'systemEntries': systemEntries.map((e) => e.toJson()).toList(),
+      'wisdomEntries': wisdomEntries.map((w) => w.toJson()).toList(),
     };
   }
 
@@ -61,6 +64,11 @@ class TeacherDashboardData {
               .map(SystemEntryRecord.fromJson)
               .toList() ??
           [],
+      wisdomEntries: (json['wisdomEntries'] as List?)
+              ?.cast<Map<String, dynamic>>()
+              .map(WisdomDisplayRecord.fromJson)
+              .toList() ??
+          [],
     );
   }
 
@@ -73,6 +81,7 @@ class TeacherDashboardData {
     List<SessionRecord>? sessions,
     List<ReflectionRecord>? reflections,
     List<SystemEntryRecord>? systemEntries,
+    List<WisdomDisplayRecord>? wisdomEntries,
   }) {
     return TeacherDashboardData(
       deviceId: deviceId ?? this.deviceId,
@@ -82,6 +91,7 @@ class TeacherDashboardData {
       sessions: sessions ?? this.sessions,
       reflections: reflections ?? this.reflections,
       systemEntries: systemEntries ?? this.systemEntries,
+      wisdomEntries: wisdomEntries ?? this.wisdomEntries,
     );
   }
 }
@@ -308,6 +318,55 @@ class ReflectionRecord {
       deviceId: deviceId ?? this.deviceId,
       question: question ?? this.question,
       answer: answer ?? this.answer,
+    );
+  }
+}
+
+class WisdomDisplayRecord {
+  final String id;
+  final DateTime timestamp;
+  final String text;
+  final String gradeTier;
+
+  WisdomDisplayRecord({
+    required this.id,
+    required this.timestamp,
+    required this.text,
+    required this.gradeTier,
+  });
+
+  /// Convert to JSON.
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'timestamp': timestamp.toIso8601String(),
+      'text': text,
+      'gradeTier': gradeTier,
+    };
+  }
+
+  /// Create from JSON.
+  factory WisdomDisplayRecord.fromJson(Map<String, dynamic> json) {
+    return WisdomDisplayRecord(
+      id: json['id'] as String? ?? '',
+      timestamp: DateTime.parse(json['timestamp'] as String),
+      text: json['text'] as String? ?? '',
+      gradeTier: json['gradeTier'] as String? ?? '',
+    );
+  }
+
+  /// Create a copy with updated fields.
+  WisdomDisplayRecord copyWith({
+    String? id,
+    DateTime? timestamp,
+    String? text,
+    String? gradeTier,
+  }) {
+    return WisdomDisplayRecord(
+      id: id ?? this.id,
+      timestamp: timestamp ?? this.timestamp,
+      text: text ?? this.text,
+      gradeTier: gradeTier ?? this.gradeTier,
     );
   }
 }

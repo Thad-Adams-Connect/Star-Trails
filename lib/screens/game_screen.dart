@@ -9,11 +9,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../providers/game_provider.dart';
+import '../data/wisdom_entries.dart';
 import '../utils/theme.dart';
 import '../utils/hud_panel_border.dart';
 import '../utils/starfield_painter.dart';
 import '../utils/grid_overlay_painter.dart';
 import '../utils/pixel_route.dart';
+import '../widgets/captain_transmission_panel.dart';
 import 'end_run_screen.dart';
 import 'logbook_screen.dart';
 
@@ -33,6 +35,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
   int _lastLogLength = 0;
   int? _historyIndex;
   String _historyDraft = '';
+  StreamSubscription? _wisdomSubscription;
 
   @override
   void initState() {
@@ -43,8 +46,30 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
       _focusCommandInput();
       _scheduleIntroStart();
       _scheduleNarrativeStart();
+      _setupWisdomListener();
       unawaited(_endRunIfStuck(context.read<GameProvider>()));
     });
+  }
+
+  void _setupWisdomListener() {
+    final provider = context.read<GameProvider>();
+    _wisdomSubscription = provider.wisdomStream.listen((wisdom) {
+      if (!mounted) return;
+      _showWisdomPanel(wisdom);
+    });
+  }
+
+  void _showWisdomPanel(WisdomEntry wisdom) {
+    if (!mounted) return;
+    
+    final provider = context.read<GameProvider>();
+    CaptainTransmissionOverlay.show(
+      context,
+      wisdom: wisdom,
+      onSaveToLogbook: () {
+        provider.markWisdomShown(wisdom, savedToLogbook: true);
+      },
+    );
   }
 
   void _scheduleIntroStart() {
@@ -86,6 +111,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _wisdomSubscription?.cancel();
     _commandController.dispose();
     _scrollController.dispose();
     _commandFocusNode.dispose();

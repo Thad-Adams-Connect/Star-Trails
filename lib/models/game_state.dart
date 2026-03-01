@@ -62,6 +62,7 @@ class GameState {
   final bool isNarrativeActive;
   final int narrativeCharIndex;
   final String narrativeSystemId;
+  final String currentNarrativeText; // The full text being displayed
   final Map<String, bool> systemFirstVisit;
 
   // Player identity
@@ -101,6 +102,7 @@ class GameState {
     this.isNarrativeActive = false,
     this.narrativeCharIndex = 0,
     this.narrativeSystemId = '',
+    this.currentNarrativeText = '',
     Map<String, bool>? systemFirstVisit,
   })  : systemFirstVisit = systemFirstVisit ?? const {},
         highestCreditsReached = highestCreditsReached ?? credits,
@@ -156,6 +158,7 @@ class GameState {
       isNarrativeActive: false,
       narrativeCharIndex: 0,
       narrativeSystemId: '',
+      currentNarrativeText: '',
       systemFirstVisit: {
         for (final planetId in GameConstants.planetIds) planetId: true,
       },
@@ -256,6 +259,7 @@ class GameState {
     bool? isNarrativeActive,
     int? narrativeCharIndex,
     String? narrativeSystemId,
+    String? currentNarrativeText,
     Map<String, bool>? systemFirstVisit,
   }) {
     final resolvedCredits = credits ?? this.credits;
@@ -306,6 +310,7 @@ class GameState {
       isNarrativeActive: isNarrativeActive ?? this.isNarrativeActive,
       narrativeCharIndex: narrativeCharIndex ?? this.narrativeCharIndex,
       narrativeSystemId: narrativeSystemId ?? this.narrativeSystemId,
+      currentNarrativeText: currentNarrativeText ?? this.currentNarrativeText,
       systemFirstVisit:
           systemFirstVisit ?? Map<String, bool>.from(this.systemFirstVisit),
     );
@@ -345,6 +350,7 @@ class GameState {
       'isNarrativeActive': isNarrativeActive,
       'narrativeCharIndex': narrativeCharIndex,
       'narrativeSystemId': narrativeSystemId,
+      'currentNarrativeText': currentNarrativeText,
       'systemFirstVisit': systemFirstVisit,
     };
   }
@@ -460,6 +466,7 @@ class GameState {
       isNarrativeActive: json['isNarrativeActive'] as bool? ?? false,
       narrativeCharIndex: json['narrativeCharIndex'] as int? ?? 0,
       narrativeSystemId: json['narrativeSystemId'] as String? ?? '',
+      currentNarrativeText: json['currentNarrativeText'] as String? ?? '',
       systemFirstVisit: systemFirstVisit,
     );
   }

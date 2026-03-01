@@ -117,6 +117,16 @@ class SettingsScreen extends StatelessWidget {
                                           provider.setReflectionEnabled(value),
                                     ),
                                     const SizedBox(height: 14),
+                                    _buildSettingTile(
+                                      context,
+                                      icon: Icons.auto_stories,
+                                      title: 'Words of Wisdom',
+                                      subtitle: 'Show contextual economic tips during gameplay',
+                                      value: provider.wisdomEnabled,
+                                      onChanged: (value) =>
+                                          provider.setWisdomEnabled(value),
+                                    ),
+                                    const SizedBox(height: 14),
                                     _buildNarrativeTextSpeedTile(
                                       context,
                                       icon: Icons.speed,
