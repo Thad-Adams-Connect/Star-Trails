@@ -5,6 +5,7 @@
 
 import 'planet.dart';
 import 'ship_upgrade.dart';
+import 'cr_access_state.dart';
 import '../utils/constants.dart';
 
 class GameState {
@@ -22,11 +23,10 @@ class GameState {
   // Current ship class
   final String shipClass; // 'CLASS-B' or 'CLASS-C'
 
-  // Permanent unlock flags (once unlocked, stays unlocked even if credits drop)
-  final bool tier1Unlocked; // 5000cr milestone
-  final bool tier2Unlocked; // 10000cr milestone
-  final bool tier3Unlocked; // 18000cr milestone
-  final bool tier4Unlocked; // 25000cr milestone
+  // CR access states: Map<access_level_number, CRAccessState>
+  // Key: "1", "2", "3", "4" (access level number as string)
+  // discovered: permanent once reached, accessActive: dynamic based on hysteresis
+  final Map<String, CRAccessState> tierAccessStates;
 
   // Route exploit control: tracks route usage
   // Key: "SYSTEM_A->SYSTEM_B->COMMODITY" (sorted alphabetically by system)
@@ -79,10 +79,7 @@ class GameState {
     required this.log,
     required this.shipUpgrades,
     this.shipClass = 'CLASS-B',
-    this.tier1Unlocked = false,
-    this.tier2Unlocked = false,
-    this.tier3Unlocked = false,
-    this.tier4Unlocked = false,
+    Map<String, CRAccessState>? tierAccessStates,
     Map<String, int>? routeUsage,
     Map<String, int>? routeRecoveryCounter,
     this.captainName = '',
@@ -107,6 +104,13 @@ class GameState {
     Map<String, bool>? systemFirstVisit,
   })  : systemFirstVisit = systemFirstVisit ?? const {},
         highestCreditsReached = highestCreditsReached ?? credits,
+        tierAccessStates = tierAccessStates ??
+            const {
+              '1': CRAccessState(discovered: false, accessActive: false),
+              '2': CRAccessState(discovered: false, accessActive: false),
+              '3': CRAccessState(discovered: false, accessActive: false),
+              '4': CRAccessState(discovered: false, accessActive: false),
+            },
         routeUsage = routeUsage ?? const {},
         routeRecoveryCounter = routeRecoveryCounter ?? const {};
 
@@ -137,10 +141,12 @@ class GameState {
       log: [],
       shipUpgrades: shipUpgrades,
       shipClass: 'CLASS-B',
-      tier1Unlocked: false,
-      tier2Unlocked: false,
-      tier3Unlocked: false,
-      tier4Unlocked: false,
+      tierAccessStates: const {
+        '1': CRAccessState(discovered: false, accessActive: false),
+        '2': CRAccessState(discovered: false, accessActive: false),
+        '3': CRAccessState(discovered: false, accessActive: false),
+        '4': CRAccessState(discovered: false, accessActive: false),
+      },
       captainName: '',
       shipName: '',
       currentSessionId: '',
@@ -228,10 +234,7 @@ class GameState {
     List<String>? log,
     Map<String, ShipUpgrade>? shipUpgrades,
     String? shipClass,
-    bool? tier1Unlocked,
-    bool? tier2Unlocked,
-    bool? tier3Unlocked,
-    bool? tier4Unlocked,
+    Map<String, CRAccessState>? tierAccessStates,
     Map<String, int>? routeUsage,
     Map<String, int>? routeRecoveryCounter,
     String? captainName,
@@ -272,10 +275,8 @@ class GameState {
       shipUpgrades:
           shipUpgrades ?? Map<String, ShipUpgrade>.from(this.shipUpgrades),
       shipClass: shipClass ?? this.shipClass,
-      tier1Unlocked: tier1Unlocked ?? this.tier1Unlocked,
-      tier2Unlocked: tier2Unlocked ?? this.tier2Unlocked,
-      tier3Unlocked: tier3Unlocked ?? this.tier3Unlocked,
-      tier4Unlocked: tier4Unlocked ?? this.tier4Unlocked,
+      tierAccessStates: tierAccessStates ??
+          Map<String, CRAccessState>.from(this.tierAccessStates),
       routeUsage: routeUsage ?? Map<String, int>.from(this.routeUsage),
       routeRecoveryCounter: routeRecoveryCounter ??
           Map<String, int>.from(this.routeRecoveryCounter),
@@ -321,10 +322,8 @@ class GameState {
       'log': log,
       'shipUpgrades': shipUpgrades.map((k, v) => MapEntry(k, v.toJson())),
       'shipClass': shipClass,
-      'tier1Unlocked': tier1Unlocked,
-      'tier2Unlocked': tier2Unlocked,
-      'tier3Unlocked': tier3Unlocked,
-      'tier4Unlocked': tier4Unlocked,
+      'tierAccessStates': tierAccessStates.map(
+          (k, v) => MapEntry(k, v.toJson())),
       'routeUsage': routeUsage,
       'routeRecoveryCounter': routeRecoveryCounter,
       'captainName': captainName,
@@ -395,6 +394,35 @@ class GameState {
         ? Map<String, int>.from(routeRecoveryJson)
         : <String, int>{};
 
+    // Handle access states: support both old and new formats
+    Map<String, CRAccessState> tierAccessStates;
+    final tierAccessJson =
+        json['tierAccessStates'] as Map<String, dynamic>?;
+    if (tierAccessJson != null) {
+      // New format
+      tierAccessStates = tierAccessJson.map((k, v) {
+        return MapEntry(k, CRAccessState.fromJson(v as Map<String, dynamic>));
+      });
+    } else {
+      // Legacy format: convert old tier unlock booleans to new format
+      final tier1Unlocked = json['tier1Unlocked'] as bool? ?? false;
+      final tier2Unlocked = json['tier2Unlocked'] as bool? ?? false;
+      final tier3Unlocked = json['tier3Unlocked'] as bool? ?? false;
+      final tier4Unlocked = json['tier4Unlocked'] as bool? ?? false;
+
+      tierAccessStates = {
+        '1': CRAccessState(
+            discovered: tier1Unlocked,
+            accessActive: false), // Access will be recalculated
+        '2': CRAccessState(
+            discovered: tier2Unlocked, accessActive: false),
+        '3': CRAccessState(
+            discovered: tier3Unlocked, accessActive: false),
+        '4': CRAccessState(
+            discovered: tier4Unlocked, accessActive: false),
+      };
+    }
+
     return GameState(
       location: json['location'] as String,
       fuel: json['fuel'] as int,
@@ -406,10 +434,7 @@ class GameState {
       log: List<String>.from(json['log'] as List),
       shipUpgrades: upgradesMap,
       shipClass: json['shipClass'] as String? ?? 'CLASS-B',
-      tier1Unlocked: json['tier1Unlocked'] as bool? ?? false,
-      tier2Unlocked: json['tier2Unlocked'] as bool? ?? false,
-      tier3Unlocked: json['tier3Unlocked'] as bool? ?? false,
-      tier4Unlocked: json['tier4Unlocked'] as bool? ?? false,
+      tierAccessStates: tierAccessStates,
       routeUsage: routeUsage,
       routeRecoveryCounter: routeRecoveryCounter,
       captainName: json['captainName'] as String? ?? '',
@@ -452,10 +477,7 @@ class GameState {
       log: [],
       shipUpgrades: Map<String, ShipUpgrade>.from(shipUpgrades),
       shipClass: shipClass,
-      tier1Unlocked: tier1Unlocked,
-      tier2Unlocked: tier2Unlocked,
-      tier3Unlocked: tier3Unlocked,
-      tier4Unlocked: tier4Unlocked,
+      tierAccessStates: Map<String, CRAccessState>.from(tierAccessStates),
       routeUsage: Map<String, int>.from(routeUsage),
       routeRecoveryCounter: Map<String, int>.from(routeRecoveryCounter),
       captainName: captainName,

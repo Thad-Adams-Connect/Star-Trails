@@ -422,8 +422,8 @@ class GameConstants {
         'The farthest established junction before uncharted corridors. Lean infrastructure means large shipments significantly influence prices.',
   };
 
-  // Ship upgrade tiers: indexed by tier (0=Base, 1=Tier 1, 2=Tier 2)
-  // Each tier has the same capacity for both fuel and cargo
+  // Ship upgrade progression: indexed by level (0=Base, 1=Enhanced, 2=Advanced)
+  // Each level has the same capacity for both fuel and cargo
   static const List<ShipUpgradeTier> upgradeTiers = [
     ShipUpgradeTier(
       name: 'Base',
@@ -431,38 +431,38 @@ class GameConstants {
       cost: 0,
     ),
     ShipUpgradeTier(
-      name: 'Tier 1',
+      name: 'Enhanced',
       capacity: 15,
       cost: 0, // Will be set per upgrade type below
     ),
     ShipUpgradeTier(
-      name: 'Tier 2',
+      name: 'Advanced',
       capacity: 20,
       cost: 0, // Will be set per upgrade type below
     ),
   ];
 
-  // Upgrade costs per type and tier
+  // Upgrade costs per type and progression level
   static const Map<String, Map<int, int>> upgradeCosts = {
     'fuel': {
       0: 0, // Base
-      1: 100, // Tier 1
-      2: 250, // Tier 2
+      1: 100, // Enhanced
+      2: 250, // Advanced
     },
     'cargo': {
       0: 0, // Base
-      1: 200, // Tier 1
-      2: 500, // Tier 2
+      1: 200, // Enhanced
+      2: 500, // Advanced
     },
     'computer': {
       0: 0, // None
-      1: 300, // Tier 1 - TRIP command
-      2: 600, // Tier 2 - MARKET command
+      1: 300, // Enhanced - TRIP command
+      2: 600, // Advanced - MARKET command
     },
     'engine': {
       0: 0, // None
-      1: 500, // Tier 1 - 1 fuel reduction
-      2: 1000, // Tier 2 - 2 fuel reduction total
+      1: 500, // Enhanced - 1 fuel reduction
+      2: 1000, // Advanced - 2 fuel reduction total
     },
   };
 

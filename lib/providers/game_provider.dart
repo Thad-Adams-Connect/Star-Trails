@@ -8,6 +8,7 @@ import 'dart:async';
 import '../models/game_state.dart';
 import '../models/planet.dart';
 import '../models/ship_upgrade.dart';
+import '../models/cr_access_state.dart';
 import '../services/persistence_service.dart';
 import '../services/teacher_dashboard_service.dart';
 import '../utils/constants.dart';
@@ -425,12 +426,12 @@ class GameProvider extends ChangeNotifier {
     if (parts.length >= 2) {
       final computerTier = _state.getComputerTier();
       if (computerTier < 2) {
-        _addLog('Remote market viewing requires Computer Tier 2.');
+        _addLog('Remote market viewing requires an Advanced Computer system.');
         _addLog('Upgrade your computer system to access this feature.');
         _addLog('Currently showing market at your docked location only.');
         _addLog('');
       } else {
-        // Computer T2 unlocked, allow remote viewing
+        // Computer Advanced unlocked, allow remote viewing
         final systemInput = parts.skip(1).join(' ').toUpperCase();
 
         if (!GameConstants.planetIds.contains(systemInput)) {
@@ -809,7 +810,7 @@ class GameProvider extends ChangeNotifier {
       }
 
       _addLog('Types: ${availableTypes.join(", ")}');
-      _addLog('Tiers: 0 (Base), 1 (Tier 1), 2 (Tier 2)');
+      _addLog('Versions: 0 (Base), 1 (Enhanced), 2 (Advanced)');
       _addLog('');
       _showUpgradeStatus();
       return;
@@ -852,9 +853,9 @@ class GameProvider extends ChangeNotifier {
       return;
     }
 
-    // Check if upgrading CLASS-C ship's computer (already has T1+T2)
+    // Check if upgrading CLASS-C ship's computer (already has advanced systems)
     if (_state.shipClass == 'CLASS-C' && typeInput == 'computer') {
-      _addLog('CLASS-C ship includes Computer T1 and T2 by default.');
+      _addLog('CLASS-C ship includes integrated Computer systems by default.');
       _addLog('No further computer upgrades available.');
       return;
     }
@@ -1526,109 +1527,96 @@ class GameProvider extends ChangeNotifier {
         _canUpgradeAnything();
   }
 
-  /// Check and update unlock flags based on current credit balance
+  /// Check and update access level discovery based on current credit balance.
+  /// 
+  /// Access level discovery is permanent - once a level reaches its threshold, it's marked as discovered.
   void _checkAndUpdateUnlocks() {
     final currentCredits = _state.credits;
+    var updatedTierStates = Map<String, CRAccessState>.from(_state.tierAccessStates);
     bool updated = false;
-    bool tier1 = _state.tier1Unlocked;
-    bool tier2 = _state.tier2Unlocked;
-    bool tier3 = _state.tier3Unlocked;
-    bool tier4 = _state.tier4Unlocked;
-
-    // Check each tier - once unlocked, stays unlocked
-    if (!tier1 && currentCredits >= GameConstants.unlockTier1Credits) {
-      tier1 = true;
-      updated = true;
-      _addLog('');
-      _addLog('═══ ACHIEVEMENT UNLOCKED ═══');
-      _addLog('Credit Balance: ${GameConstants.unlockTier1Credits}+');
-      _addLog('');
-      _addLog('NEW SYSTEMS:');
-      _addLog('  • Orivault Complex');
-      _addLog('  • Candescent Yard');
-      _addLog('');
-      _addLog('NEW COMMODITY:');
-      _addLog('  • Tech');
-      _addLog('');
-      _addLog('NEW UPGRADE PATH:');
-      _addLog('  • Computer (use "upgrade computer <tier>")');
-      _addLog(
-          '    - Tier 1: TRIP command (${GameConstants.upgradeCosts['computer']![1]} cr)');
-      _addLog(
-          '    - Tier 2: MARKET command (${GameConstants.upgradeCosts['computer']![2]} cr)');
-      _addLog('════════════════════════════');
-      _addLog('');
-    }
-
-    if (!tier2 && currentCredits >= GameConstants.unlockTier2Credits) {
-      tier2 = true;
-      updated = true;
-      _addLog('');
-      _addLog('═══ ACHIEVEMENT UNLOCKED ═══');
-      _addLog('Credit Balance: ${GameConstants.unlockTier2Credits}+');
-      _addLog('');
-      _addLog('NEW SYSTEMS:');
-      _addLog('  • Fluxhaven Institute');
-      _addLog('  • Velaris Enclave');
-      _addLog('');
-      _addLog('NEW COMMODITY:');
-      _addLog('  • Luxury');
-      _addLog('');
-      _addLog('NEW UPGRADE PATH:');
-      _addLog('  • Engine (use "upgrade engine <tier>")');
-      _addLog(
-          '    - Tier 1: -1 fuel per trip (${GameConstants.upgradeCosts['engine']![1]} cr)');
-      _addLog(
-          '    - Tier 2: -2 fuel per trip (${GameConstants.upgradeCosts['engine']![2]} cr)');
-      _addLog('════════════════════════════');
-      _addLog('');
-    }
-
-    if (!tier3 && currentCredits >= GameConstants.unlockTier3Credits) {
-      tier3 = true;
-      updated = true;
-      _addLog('');
-      _addLog('═══ ACHIEVEMENT UNLOCKED ═══');
-      _addLog('Credit Balance: ${GameConstants.unlockTier3Credits}+');
-      _addLog('');
-      _addLog('NEW SYSTEMS:');
-      _addLog('  • Gateforge Bastion');
-      _addLog('  • Redhaven Anchorpoint');
-      _addLog('');
-      _addLog('NEW SHIP AVAILABLE:');
-      final classCSpec = GameConstants.shipSpecs['CLASS-C']!;
-      _addLog('  • CLASS-C Ship (${classCSpec.baseCost} cr)');
-      _addLog('    - ${classCSpec.fuelCapacity} Fuel Capacity');
-      _addLog('    - ${classCSpec.cargoCapacity} Cargo Capacity');
-      _addLog('    - Includes Computer T1+T2');
-      _addLog('    - Purchase at HELIOS REACH: "buy ship"');
-      _addLog('════════════════════════════');
-      _addLog('');
-    }
-
-    if (!tier4 && currentCredits >= GameConstants.unlockTier4Credits) {
-      tier4 = true;
-      updated = true;
-      _addLog('');
-      _addLog('═══ ACHIEVEMENT UNLOCKED ═══');
-      _addLog('Credit Balance: ${GameConstants.unlockTier4Credits}+');
-      _addLog('');
-      _addLog('NEW SYSTEMS:');
-      _addLog('  • Startrail Expanse');
-      _addLog('  • Outercrest Nexus');
-      _addLog('');
-      _addLog('Full 12-system map now available!');
-      _addLog('════════════════════════════');
-      _addLog('');
+    
+    // Check each tier for discovery
+    for (int tierNum = 1; tierNum <= 4; tierNum++) {
+      final tierKey = tierNum.toString();
+      final oldState = updatedTierStates[tierKey]!;
+      final threshold = CRAccessConfig.getThreshold(tierNum);
+      
+      // Mark tier as discovered if threshold is reached
+      bool discovered = oldState.discovered;
+      bool showAchievementMessage = false;
+      
+      if (!discovered && currentCredits >= threshold) {
+        discovered = true;
+        showAchievementMessage = true;
+        updated = true;
+        
+        // Update with new discovery state (access always granted when discovered)
+        updatedTierStates[tierKey] = CRAccessState(
+          discovered: true,
+          accessActive: true,
+        );
+      }
+      
+      // Show achievement message if newly discovered
+      if (showAchievementMessage) {
+        _addLog('');
+        _addLog('═══ ACCESS GRANTED ═══');
+        _addLog('at $threshold Credits');
+        _addLog('');
+        
+        if (tierNum == 1) {
+          _addLog('NEW SYSTEMS:');
+          _addLog('  • Orivault Complex');
+          _addLog('  • Candescent Yard');
+          _addLog('');
+          _addLog('NEW COMMODITY:');
+          _addLog('  • Tech');
+          _addLog('');
+          _addLog('NEW UPGRADE:');
+          _addLog('  • Computer');
+          _addLog('    - Enhanced: TRIP command (${GameConstants.upgradeCosts['computer']![1]} cr)');
+          _addLog('    - Advanced: MARKET command (${GameConstants.upgradeCosts['computer']![2]} cr)');
+        } else if (tierNum == 2) {
+          _addLog('NEW SYSTEMS:');
+          _addLog('  • Fluxhaven Institute');
+          _addLog('  • Velaris Enclave');
+          _addLog('');
+          _addLog('NEW COMMODITY:');
+          _addLog('  • Luxury');
+          _addLog('');
+          _addLog('NEW UPGRADE:');
+          _addLog('  • Engine');
+          _addLog('    - Enhanced: -1 fuel per trip (${GameConstants.upgradeCosts['engine']![1]} cr)');
+          _addLog('    - Advanced: -2 fuel per trip (${GameConstants.upgradeCosts['engine']![2]} cr)');
+        } else if (tierNum == 3) {
+          _addLog('NEW SYSTEMS:');
+          _addLog('  • Gateforge Bastion');
+          _addLog('  • Redhaven Anchorpoint');
+          _addLog('');
+          _addLog('NEW SHIP AVAILABLE:');
+          final classCSpec = GameConstants.shipSpecs['CLASS-C']!;
+          _addLog('  • CLASS-C Ship (${classCSpec.baseCost} cr)');
+          _addLog('    - ${classCSpec.fuelCapacity} Fuel Capacity');
+          _addLog('    - ${classCSpec.cargoCapacity} Cargo Capacity');
+          _addLog('    - Includes Computer systems');
+          _addLog('    - Purchase at HELIOS REACH: "buy ship"');
+        } else if (tierNum == 4) {
+          _addLog('NEW SYSTEMS:');
+          _addLog('  • Startrail Expanse');
+          _addLog('  • Outercrest Nexus');
+          _addLog('');
+          _addLog('Full star map now available!');
+        }
+        
+        _addLog('════════════════════════════');
+        _addLog('');
+      }
     }
 
     if (updated) {
       _updateState(
           _state.copyWith(
-            tier1Unlocked: tier1,
-            tier2Unlocked: tier2,
-            tier3Unlocked: tier3,
-            tier4Unlocked: tier4,
+            tierAccessStates: updatedTierStates,
           ),
           notify: false);
     }
@@ -1710,10 +1698,10 @@ class GameProvider extends ChangeNotifier {
   }
 
   void _handleTrip(List<String> parts) {
-    // Requires Computer T1 or higher
+    // Requires Computer enhanced or higher
     final computerTier = _state.getComputerTier();
     if (computerTier < 1) {
-      _addLog('TRIP command requires Computer Tier 1.');
+      _addLog('TRIP command requires an Enhanced Computer system.');
       _addLog('Upgrade your computer system to access this feature.');
       return;
     }
@@ -1860,7 +1848,7 @@ class GameProvider extends ChangeNotifier {
       _addLog('New ship: CLASS-C');
       _addLog('Fuel capacity: ${classCSpec.fuelCapacity}');
       _addLog('Cargo capacity: ${classCSpec.cargoCapacity}');
-      _addLog('Integrated systems: Computer T1+T2');
+      _addLog('Integrated systems: Advanced Computer');
       _addLog('');
       _addLog('Credits remaining: $newCredits');
       _addLog('═══════════════════════════');
