@@ -39,6 +39,7 @@ class _MenuScreenState extends State<MenuScreen> {
   Future<void> _checkSave() async {
     if (!mounted) return;
     final provider = context.read<GameProvider>();
+    await provider.loadSettings();
     final loaded = await provider.loadGame();
     if (!mounted) return;
     setState(() {
@@ -174,7 +175,7 @@ class _MenuScreenState extends State<MenuScreen> {
   Future<void> _startNewGame() async {
     if (!mounted) return;
     final provider = context.read<GameProvider>();
-    
+
     // Check if player has set names
     if (provider.state.captainName.isEmpty || provider.state.shipName.isEmpty) {
       final result = await Navigator.of(context).push<bool>(
@@ -182,7 +183,7 @@ class _MenuScreenState extends State<MenuScreen> {
       );
       if (result != true || !mounted) return;
     }
-    
+
     await provider.startNewGame();
     if (!mounted) return;
     await Navigator.of(context).push(pixelRoute(const GameScreen()));
@@ -193,7 +194,7 @@ class _MenuScreenState extends State<MenuScreen> {
   Future<void> _continueGame() async {
     if (!mounted) return;
     final provider = context.read<GameProvider>();
-    
+
     // Check if player has set names
     if (provider.state.captainName.isEmpty || provider.state.shipName.isEmpty) {
       final result = await Navigator.of(context).push<bool>(
@@ -201,14 +202,14 @@ class _MenuScreenState extends State<MenuScreen> {
       );
       if (result != true || !mounted) return;
     }
-    
+
     // Start a new session for the continued game with same progress/ship
     await provider.dashboard.startSession();
-    
+
     // Update session ID in game state using internal method
     final sessionId = provider.dashboard.getCurrentSessionId();
     provider.updateSessionId(sessionId);
-    
+
     if (!mounted) return;
     await Navigator.of(context).push(pixelRoute(const GameScreen()));
     if (!mounted) return;

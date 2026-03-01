@@ -69,14 +69,14 @@ class Planet {
 
   factory Planet.fromJson(Map<String, dynamic> json) {
     final demandIndexJson = Map<String, int>.from(json['demandIndex'] as Map);
-    
+
     // Ensure all current itemIds have entries (for backward compatibility)
     for (var item in GameConstants.itemIds) {
       if (!demandIndexJson.containsKey(item)) {
         demandIndexJson[item] = 3; // Default demand level
       }
     }
-    
+
     return Planet(
       id: json['id'] as String,
       demandIndex: demandIndexJson,
