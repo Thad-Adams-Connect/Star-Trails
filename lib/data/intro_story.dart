@@ -5,7 +5,7 @@
 
 /// Intro story for Star Trails - displayed as a typewriter sequence at game start.
 const String introStoryText = 'Year: 2267\n'
-    '\n'
+'\n'
     'Long ago, humans learned how to travel between the stars.\n'
     'Over time, settlements formed across multiple systems. There is no single authority ruling the stars. Instead, trade connects them.\n'
     '\n'

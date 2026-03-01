@@ -126,8 +126,7 @@ class _PlayerIdentityScreenState extends State<PlayerIdentityScreen> {
                               child: Padding(
                                 padding: const EdgeInsets.all(32),
                                 child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
                                   children: [
                                     if (widget.isFirstTime) ...[
                                       Text(
@@ -151,26 +150,21 @@ class _PlayerIdentityScreenState extends State<PlayerIdentityScreen> {
                                           color: AppTheme.phosphorGreenDim,
                                         ),
                                         filled: true,
-                                        fillColor:
-                                            Colors.black.withValues(alpha: 0.5),
+                                        fillColor: Colors.black.withValues(alpha: 0.5),
                                         border: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(6),
+                                          borderRadius: BorderRadius.circular(6),
                                           borderSide: BorderSide(
-                                            color: AppTheme.phosphorGreen
-                                                .withValues(alpha: 0.6),
+                                            color: AppTheme.phosphorGreen.withValues(alpha: 0.6),
                                           ),
                                         ),
                                         enabledBorder: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(6),
+                                          borderRadius: BorderRadius.circular(6),
                                           borderSide: const BorderSide(
                                             color: AppTheme.phosphorGreen,
                                           ),
                                         ),
                                         focusedBorder: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(6),
+                                          borderRadius: BorderRadius.circular(6),
                                           borderSide: const BorderSide(
                                             color: AppTheme.phosphorGreenBright,
                                             width: 2,
@@ -194,26 +188,21 @@ class _PlayerIdentityScreenState extends State<PlayerIdentityScreen> {
                                           color: AppTheme.phosphorGreenDim,
                                         ),
                                         filled: true,
-                                        fillColor:
-                                            Colors.black.withValues(alpha: 0.5),
+                                        fillColor: Colors.black.withValues(alpha: 0.5),
                                         border: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(6),
+                                          borderRadius: BorderRadius.circular(6),
                                           borderSide: BorderSide(
-                                            color: AppTheme.phosphorGreen
-                                                .withValues(alpha: 0.6),
+                                            color: AppTheme.phosphorGreen.withValues(alpha: 0.6),
                                           ),
                                         ),
                                         enabledBorder: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(6),
+                                          borderRadius: BorderRadius.circular(6),
                                           borderSide: const BorderSide(
                                             color: AppTheme.phosphorGreen,
                                           ),
                                         ),
                                         focusedBorder: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(6),
+                                          borderRadius: BorderRadius.circular(6),
                                           borderSide: const BorderSide(
                                             color: AppTheme.phosphorGreenBright,
                                             width: 2,
@@ -235,27 +224,21 @@ class _PlayerIdentityScreenState extends State<PlayerIdentityScreen> {
                                           ),
                                           decoration: BoxDecoration(
                                             color: _saving
-                                                ? AppTheme.phosphorGreenDim
-                                                    .withValues(alpha: 0.2)
-                                                : AppTheme.phosphorGreenDim
-                                                    .withValues(alpha: 0.3),
-                                            borderRadius:
-                                                BorderRadius.circular(6),
+                                                ? AppTheme.phosphorGreenDim.withValues(alpha: 0.2)
+                                                : AppTheme.phosphorGreenDim.withValues(alpha: 0.3),
+                                            borderRadius: BorderRadius.circular(6),
                                             border: Border.all(
                                               color: _saving
                                                   ? AppTheme.phosphorGreenDim
-                                                  : AppTheme.phosphorGreen
-                                                      .withValues(alpha: 0.6),
+                                                  : AppTheme.phosphorGreen.withValues(alpha: 0.6),
                                               width: 1,
                                             ),
                                             boxShadow: _saving
                                                 ? []
                                                 : [
                                                     BoxShadow(
-                                                      color: AppTheme
-                                                          .phosphorGreen
-                                                          .withValues(
-                                                              alpha: 0.15),
+                                                      color: AppTheme.phosphorGreen
+                                                          .withValues(alpha: 0.15),
                                                       blurRadius: 6,
                                                     ),
                                                   ],
@@ -265,20 +248,16 @@ class _PlayerIdentityScreenState extends State<PlayerIdentityScreen> {
                                                 ? const SizedBox(
                                                     height: 20,
                                                     width: 20,
-                                                    child:
-                                                        CircularProgressIndicator(
-                                                      color: AppTheme
-                                                          .phosphorGreen,
+                                                    child: CircularProgressIndicator(
+                                                      color: AppTheme.phosphorGreen,
                                                       strokeWidth: 2,
                                                     ),
                                                   )
                                                 : const Text(
                                                     'SAVE',
                                                     style: TextStyle(
-                                                      color: AppTheme
-                                                          .phosphorGreenBright,
-                                                      fontWeight:
-                                                          FontWeight.bold,
+                                                      color: AppTheme.phosphorGreenBright,
+                                                      fontWeight: FontWeight.bold,
                                                       fontFamily: 'monospace',
                                                       fontSize: 16,
                                                     ),

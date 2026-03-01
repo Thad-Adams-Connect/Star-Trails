@@ -175,12 +175,10 @@ class _EndRunScreenState extends State<EndRunScreen> {
                                     children: [
                                       if (state.captainName.isNotEmpty)
                                         Padding(
-                                          padding:
-                                              const EdgeInsets.only(bottom: 16),
+                                          padding: const EdgeInsets.only(bottom: 16),
                                           child: Text(
                                             'CAPTAIN ${state.captainName.toUpperCase()}',
-                                            style: AppTheme.terminalLabel
-                                                .copyWith(fontSize: 14),
+                                            style: AppTheme.terminalLabel.copyWith(fontSize: 14),
                                             textAlign: TextAlign.center,
                                           ),
                                         ),
@@ -188,14 +186,10 @@ class _EndRunScreenState extends State<EndRunScreen> {
                                         startingCredits: 1000,
                                         finalCredits: state.credits,
                                         totalFuelUsed: state.totalFuelUsed,
-                                        totalCreditsSpentOnFuel:
-                                            state.totalCreditsSpentOnFuel,
-                                        totalCreditsSpentOnGoods:
-                                            state.totalCreditsSpentOnGoods,
-                                        totalCreditsSpentOnUpgrades:
-                                            state.totalCreditsSpentOnUpgrades,
-                                        totalCreditsEarned:
-                                            state.totalCreditsEarned,
+                                        totalCreditsSpentOnFuel: state.totalCreditsSpentOnFuel,
+                                        totalCreditsSpentOnGoods: state.totalCreditsSpentOnGoods,
+                                        totalCreditsSpentOnUpgrades: state.totalCreditsSpentOnUpgrades,
+                                        totalCreditsEarned: state.totalCreditsEarned,
                                       ),
                                       if (_showReflection) ...[
                                         const SizedBox(height: 20),

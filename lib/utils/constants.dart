@@ -25,25 +25,21 @@ class GameConstants {
     20000,
     finalCreditMilestone,
   ];
-
+  
   // Credit progression unlock thresholds
-  static const int unlockTier1Credits = 5000; // S5-S6, Tech, Computer
+  static const int unlockTier1Credits = 5000;  // S5-S6, Tech, Computer
   static const int unlockTier2Credits = 10000; // S7-S8, Luxury, Engine
   static const int unlockTier3Credits = 18000; // S9-S10, Class-C Ship
   static const int unlockTier4Credits = 25000; // S11-S12
-
+  
   // Route exploit control constants
-  static const int routeFreeUses =
-      3; // Number of uses before price adjustments begin
-  static const int routeUsesPerAdjustment =
-      2; // Uses needed for each 5% price change
-  static const double routePriceAdjustmentPercent =
-      0.05; // 5% price change per adjustment
-  static const int routeRecoveryThreshold =
-      5; // Different trades needed for recovery
+  static const int routeFreeUses = 3; // Number of uses before price adjustments begin
+  static const int routeUsesPerAdjustment = 2; // Uses needed for each 5% price change
+  static const double routePriceAdjustmentPercent = 0.05; // 5% price change per adjustment
+  static const int routeRecoveryThreshold = 5; // Different trades needed for recovery
   static const int routeRecoveryAmount = 2; // Uses removed on recovery
   static const int minFuelPerTrip = 3; // Minimum fuel cost for any trip
-
+  
   static const String initialLocation = 'HELIOS REACH';
 
   // Inner Ring systems (always available)
@@ -53,31 +49,31 @@ class GameConstants {
     'SOLACE STATION',
     'MERIDIAN OUTPOST'
   ];
-
+  
   // Tier 1 systems (unlock at 5000cr)
   static const List<String> tier1PlanetIds = [
     'ORIVAULT COMPLEX',
     'CANDESCENT YARD'
   ];
-
+  
   // Tier 2 systems (unlock at 10000cr)
   static const List<String> tier2PlanetIds = [
     'FLUXHAVEN INSTITUTE',
     'VELARIS ENCLAVE'
   ];
-
+  
   // Tier 3 systems (unlock at 18000cr)
   static const List<String> tier3PlanetIds = [
     'GATEFORGE BASTION',
     'REDHAVEN ANCHORPOINT'
   ];
-
+  
   // Tier 4 systems (unlock at 25000cr)
   static const List<String> tier4PlanetIds = [
     'STARTRAIL EXPANSE',
     'OUTERCREST NEXUS'
   ];
-
+  
   // All systems combined (for backward compatibility)
   static const List<String> planetIds = [
     ...innerRingPlanetIds,
@@ -86,16 +82,16 @@ class GameConstants {
     ...tier3PlanetIds,
     ...tier4PlanetIds,
   ];
-
+  
   // Base commodities (always available)
   static const List<String> baseCommodityIds = ['Food', 'Ore', 'Medicine'];
-
+  
   // Tier 1 commodities (unlock at 5000cr)
   static const List<String> tier1CommodityIds = ['Tech'];
-
+  
   // Tier 2 commodities (unlock at 10000cr)
   static const List<String> tier2CommodityIds = ['Luxury'];
-
+  
   // All commodities combined
   static const List<String> itemIds = [
     ...baseCommodityIds,
@@ -108,176 +104,92 @@ class GameConstants {
   static const Map<String, Map<String, int>> travelCosts = {
     // Inner Ring systems
     'HELIOS REACH': {
-      'HELIOS REACH': 0,
-      'KESTREL BELT': 3,
-      'SOLACE STATION': 4,
-      'MERIDIAN OUTPOST': 5,
-      'ORIVAULT COMPLEX': 4,
-      'CANDESCENT YARD': 4,
-      'FLUXHAVEN INSTITUTE': 5,
-      'VELARIS ENCLAVE': 5,
-      'GATEFORGE BASTION': 6,
-      'REDHAVEN ANCHORPOINT': 6,
-      'STARTRAIL EXPANSE': 8,
-      'OUTERCREST NEXUS': 8,
+      'HELIOS REACH': 0, 'KESTREL BELT': 3, 'SOLACE STATION': 4, 'MERIDIAN OUTPOST': 5,
+      'ORIVAULT COMPLEX': 4, 'CANDESCENT YARD': 4,
+      'FLUXHAVEN INSTITUTE': 5, 'VELARIS ENCLAVE': 5,
+      'GATEFORGE BASTION': 6, 'REDHAVEN ANCHORPOINT': 6,
+      'STARTRAIL EXPANSE': 8, 'OUTERCREST NEXUS': 8,
     },
     'KESTREL BELT': {
-      'HELIOS REACH': 3,
-      'KESTREL BELT': 0,
-      'SOLACE STATION': 3,
-      'MERIDIAN OUTPOST': 4,
-      'ORIVAULT COMPLEX': 4,
-      'CANDESCENT YARD': 4,
-      'FLUXHAVEN INSTITUTE': 5,
-      'VELARIS ENCLAVE': 5,
-      'GATEFORGE BASTION': 6,
-      'REDHAVEN ANCHORPOINT': 6,
-      'STARTRAIL EXPANSE': 8,
-      'OUTERCREST NEXUS': 8,
+      'HELIOS REACH': 3, 'KESTREL BELT': 0, 'SOLACE STATION': 3, 'MERIDIAN OUTPOST': 4,
+      'ORIVAULT COMPLEX': 4, 'CANDESCENT YARD': 4,
+      'FLUXHAVEN INSTITUTE': 5, 'VELARIS ENCLAVE': 5,
+      'GATEFORGE BASTION': 6, 'REDHAVEN ANCHORPOINT': 6,
+      'STARTRAIL EXPANSE': 8, 'OUTERCREST NEXUS': 8,
     },
     'SOLACE STATION': {
-      'HELIOS REACH': 4,
-      'KESTREL BELT': 3,
-      'SOLACE STATION': 0,
-      'MERIDIAN OUTPOST': 3,
-      'ORIVAULT COMPLEX': 4,
-      'CANDESCENT YARD': 4,
-      'FLUXHAVEN INSTITUTE': 5,
-      'VELARIS ENCLAVE': 5,
-      'GATEFORGE BASTION': 6,
-      'REDHAVEN ANCHORPOINT': 6,
-      'STARTRAIL EXPANSE': 8,
-      'OUTERCREST NEXUS': 8,
+      'HELIOS REACH': 4, 'KESTREL BELT': 3, 'SOLACE STATION': 0, 'MERIDIAN OUTPOST': 3,
+      'ORIVAULT COMPLEX': 4, 'CANDESCENT YARD': 4,
+      'FLUXHAVEN INSTITUTE': 5, 'VELARIS ENCLAVE': 5,
+      'GATEFORGE BASTION': 6, 'REDHAVEN ANCHORPOINT': 6,
+      'STARTRAIL EXPANSE': 8, 'OUTERCREST NEXUS': 8,
     },
     'MERIDIAN OUTPOST': {
-      'HELIOS REACH': 5,
-      'KESTREL BELT': 4,
-      'SOLACE STATION': 3,
-      'MERIDIAN OUTPOST': 0,
-      'ORIVAULT COMPLEX': 4,
-      'CANDESCENT YARD': 4,
-      'FLUXHAVEN INSTITUTE': 5,
-      'VELARIS ENCLAVE': 5,
-      'GATEFORGE BASTION': 6,
-      'REDHAVEN ANCHORPOINT': 6,
-      'STARTRAIL EXPANSE': 8,
-      'OUTERCREST NEXUS': 8,
+      'HELIOS REACH': 5, 'KESTREL BELT': 4, 'SOLACE STATION': 3, 'MERIDIAN OUTPOST': 0,
+      'ORIVAULT COMPLEX': 4, 'CANDESCENT YARD': 4,
+      'FLUXHAVEN INSTITUTE': 5, 'VELARIS ENCLAVE': 5,
+      'GATEFORGE BASTION': 6, 'REDHAVEN ANCHORPOINT': 6,
+      'STARTRAIL EXPANSE': 8, 'OUTERCREST NEXUS': 8,
     },
     // Tier 1 systems (5000cr unlock)
     'ORIVAULT COMPLEX': {
-      'HELIOS REACH': 4,
-      'KESTREL BELT': 4,
-      'SOLACE STATION': 4,
-      'MERIDIAN OUTPOST': 4,
-      'ORIVAULT COMPLEX': 0,
-      'CANDESCENT YARD': 3,
-      'FLUXHAVEN INSTITUTE': 4,
-      'VELARIS ENCLAVE': 4,
-      'GATEFORGE BASTION': 5,
-      'REDHAVEN ANCHORPOINT': 5,
-      'STARTRAIL EXPANSE': 7,
-      'OUTERCREST NEXUS': 7,
+      'HELIOS REACH': 4, 'KESTREL BELT': 4, 'SOLACE STATION': 4, 'MERIDIAN OUTPOST': 4,
+      'ORIVAULT COMPLEX': 0, 'CANDESCENT YARD': 3,
+      'FLUXHAVEN INSTITUTE': 4, 'VELARIS ENCLAVE': 4,
+      'GATEFORGE BASTION': 5, 'REDHAVEN ANCHORPOINT': 5,
+      'STARTRAIL EXPANSE': 7, 'OUTERCREST NEXUS': 7,
     },
     'CANDESCENT YARD': {
-      'HELIOS REACH': 4,
-      'KESTREL BELT': 4,
-      'SOLACE STATION': 4,
-      'MERIDIAN OUTPOST': 4,
-      'ORIVAULT COMPLEX': 3,
-      'CANDESCENT YARD': 0,
-      'FLUXHAVEN INSTITUTE': 4,
-      'VELARIS ENCLAVE': 4,
-      'GATEFORGE BASTION': 5,
-      'REDHAVEN ANCHORPOINT': 5,
-      'STARTRAIL EXPANSE': 7,
-      'OUTERCREST NEXUS': 7,
+      'HELIOS REACH': 4, 'KESTREL BELT': 4, 'SOLACE STATION': 4, 'MERIDIAN OUTPOST': 4,
+      'ORIVAULT COMPLEX': 3, 'CANDESCENT YARD': 0,
+      'FLUXHAVEN INSTITUTE': 4, 'VELARIS ENCLAVE': 4,
+      'GATEFORGE BASTION': 5, 'REDHAVEN ANCHORPOINT': 5,
+      'STARTRAIL EXPANSE': 7, 'OUTERCREST NEXUS': 7,
     },
     // Tier 2 systems (10000cr unlock)
     'FLUXHAVEN INSTITUTE': {
-      'HELIOS REACH': 5,
-      'KESTREL BELT': 5,
-      'SOLACE STATION': 5,
-      'MERIDIAN OUTPOST': 5,
-      'ORIVAULT COMPLEX': 4,
-      'CANDESCENT YARD': 4,
-      'FLUXHAVEN INSTITUTE': 0,
-      'VELARIS ENCLAVE': 3,
-      'GATEFORGE BASTION': 4,
-      'REDHAVEN ANCHORPOINT': 4,
-      'STARTRAIL EXPANSE': 6,
-      'OUTERCREST NEXUS': 6,
+      'HELIOS REACH': 5, 'KESTREL BELT': 5, 'SOLACE STATION': 5, 'MERIDIAN OUTPOST': 5,
+      'ORIVAULT COMPLEX': 4, 'CANDESCENT YARD': 4,
+      'FLUXHAVEN INSTITUTE': 0, 'VELARIS ENCLAVE': 3,
+      'GATEFORGE BASTION': 4, 'REDHAVEN ANCHORPOINT': 4,
+      'STARTRAIL EXPANSE': 6, 'OUTERCREST NEXUS': 6,
     },
     'VELARIS ENCLAVE': {
-      'HELIOS REACH': 5,
-      'KESTREL BELT': 5,
-      'SOLACE STATION': 5,
-      'MERIDIAN OUTPOST': 5,
-      'ORIVAULT COMPLEX': 4,
-      'CANDESCENT YARD': 4,
-      'FLUXHAVEN INSTITUTE': 3,
-      'VELARIS ENCLAVE': 0,
-      'GATEFORGE BASTION': 4,
-      'REDHAVEN ANCHORPOINT': 4,
-      'STARTRAIL EXPANSE': 6,
-      'OUTERCREST NEXUS': 6,
+      'HELIOS REACH': 5, 'KESTREL BELT': 5, 'SOLACE STATION': 5, 'MERIDIAN OUTPOST': 5,
+      'ORIVAULT COMPLEX': 4, 'CANDESCENT YARD': 4,
+      'FLUXHAVEN INSTITUTE': 3, 'VELARIS ENCLAVE': 0,
+      'GATEFORGE BASTION': 4, 'REDHAVEN ANCHORPOINT': 4,
+      'STARTRAIL EXPANSE': 6, 'OUTERCREST NEXUS': 6,
     },
     // Tier 3 systems (18000cr unlock)
     'GATEFORGE BASTION': {
-      'HELIOS REACH': 6,
-      'KESTREL BELT': 6,
-      'SOLACE STATION': 6,
-      'MERIDIAN OUTPOST': 6,
-      'ORIVAULT COMPLEX': 5,
-      'CANDESCENT YARD': 5,
-      'FLUXHAVEN INSTITUTE': 4,
-      'VELARIS ENCLAVE': 4,
-      'GATEFORGE BASTION': 0,
-      'REDHAVEN ANCHORPOINT': 3,
-      'STARTRAIL EXPANSE': 5,
-      'OUTERCREST NEXUS': 5,
+      'HELIOS REACH': 6, 'KESTREL BELT': 6, 'SOLACE STATION': 6, 'MERIDIAN OUTPOST': 6,
+      'ORIVAULT COMPLEX': 5, 'CANDESCENT YARD': 5,
+      'FLUXHAVEN INSTITUTE': 4, 'VELARIS ENCLAVE': 4,
+      'GATEFORGE BASTION': 0, 'REDHAVEN ANCHORPOINT': 3,
+      'STARTRAIL EXPANSE': 5, 'OUTERCREST NEXUS': 5,
     },
     'REDHAVEN ANCHORPOINT': {
-      'HELIOS REACH': 6,
-      'KESTREL BELT': 6,
-      'SOLACE STATION': 6,
-      'MERIDIAN OUTPOST': 6,
-      'ORIVAULT COMPLEX': 5,
-      'CANDESCENT YARD': 5,
-      'FLUXHAVEN INSTITUTE': 4,
-      'VELARIS ENCLAVE': 4,
-      'GATEFORGE BASTION': 3,
-      'REDHAVEN ANCHORPOINT': 0,
-      'STARTRAIL EXPANSE': 5,
-      'OUTERCREST NEXUS': 5,
+      'HELIOS REACH': 6, 'KESTREL BELT': 6, 'SOLACE STATION': 6, 'MERIDIAN OUTPOST': 6,
+      'ORIVAULT COMPLEX': 5, 'CANDESCENT YARD': 5,
+      'FLUXHAVEN INSTITUTE': 4, 'VELARIS ENCLAVE': 4,
+      'GATEFORGE BASTION': 3, 'REDHAVEN ANCHORPOINT': 0,
+      'STARTRAIL EXPANSE': 5, 'OUTERCREST NEXUS': 5,
     },
     // Tier 4 systems (25000cr unlock)
     'STARTRAIL EXPANSE': {
-      'HELIOS REACH': 8,
-      'KESTREL BELT': 8,
-      'SOLACE STATION': 8,
-      'MERIDIAN OUTPOST': 8,
-      'ORIVAULT COMPLEX': 7,
-      'CANDESCENT YARD': 7,
-      'FLUXHAVEN INSTITUTE': 6,
-      'VELARIS ENCLAVE': 6,
-      'GATEFORGE BASTION': 5,
-      'REDHAVEN ANCHORPOINT': 5,
-      'STARTRAIL EXPANSE': 0,
-      'OUTERCREST NEXUS': 3,
+      'HELIOS REACH': 8, 'KESTREL BELT': 8, 'SOLACE STATION': 8, 'MERIDIAN OUTPOST': 8,
+      'ORIVAULT COMPLEX': 7, 'CANDESCENT YARD': 7,
+      'FLUXHAVEN INSTITUTE': 6, 'VELARIS ENCLAVE': 6,
+      'GATEFORGE BASTION': 5, 'REDHAVEN ANCHORPOINT': 5,
+      'STARTRAIL EXPANSE': 0, 'OUTERCREST NEXUS': 3,
     },
     'OUTERCREST NEXUS': {
-      'HELIOS REACH': 8,
-      'KESTREL BELT': 8,
-      'SOLACE STATION': 8,
-      'MERIDIAN OUTPOST': 8,
-      'ORIVAULT COMPLEX': 7,
-      'CANDESCENT YARD': 7,
-      'FLUXHAVEN INSTITUTE': 6,
-      'VELARIS ENCLAVE': 6,
-      'GATEFORGE BASTION': 5,
-      'REDHAVEN ANCHORPOINT': 5,
-      'STARTRAIL EXPANSE': 3,
-      'OUTERCREST NEXUS': 0,
+      'HELIOS REACH': 8, 'KESTREL BELT': 8, 'SOLACE STATION': 8, 'MERIDIAN OUTPOST': 8,
+      'ORIVAULT COMPLEX': 7, 'CANDESCENT YARD': 7,
+      'FLUXHAVEN INSTITUTE': 6, 'VELARIS ENCLAVE': 6,
+      'GATEFORGE BASTION': 5, 'REDHAVEN ANCHORPOINT': 5,
+      'STARTRAIL EXPANSE': 3, 'OUTERCREST NEXUS': 0,
     },
   };
 
@@ -397,29 +309,29 @@ class GameConstants {
   // Planet descriptions
   static const Map<String, String> planetDescriptions = {
     'HELIOS REACH':
-        'The stable Inner Ring hub and your starting point. Tight spreads and low volatility make it a safe place to stabilize and upgrade your ship.',
+      'The stable Inner Ring hub and your starting point. Tight spreads and low volatility make it a safe place to stabilize and upgrade your ship.',
     'KESTREL BELT':
-        'An industrial asteroid belt with abundant ore. Ore is cheap to buy here, while medicine sells at a premium.',
+      'An industrial asteroid belt with abundant ore. Ore is cheap to buy here, while medicine sells at a premium.',
     'SOLACE STATION':
-        'A structured training hub with steady storage and moderate margins. A reliable environment for learning trade routes.',
+      'A structured training hub with steady storage and moderate margins. A reliable environment for learning trade routes.',
     'MERIDIAN OUTPOST':
-        'An agricultural frontier system. Food is cheapest here, and ore demand runs high for outbound trade.',
+      'An agricultural frontier system. Food is cheapest here, and ore demand runs high for outbound trade.',
     'ORIVAULT COMPLEX':
-        'A research and fabrication colony specializing in navigation and computer systems. Located beyond the Inner Ring, it offers technology at competitive prices.',
+      'A research and fabrication colony specializing in navigation and computer systems. Located beyond the Inner Ring, it offers technology at competitive prices.',
     'CANDESCENT YARD':
-        'Large-scale energy testing platforms with experimental propulsion systems. Fuel efficiency trials occur here daily.',
+      'Large-scale energy testing platforms with experimental propulsion systems. Fuel efficiency trials occur here daily.',
     'FLUXHAVEN INSTITUTE':
-        'A propulsion research center focused on reducing fuel waste. Advanced engine technology development happens here.',
+      'A propulsion research center focused on reducing fuel waste. Advanced engine technology development happens here.',
     'VELARIS ENCLAVE':
-        'Design studios producing luxury navigation systems and refined interior modules. Demand for luxury goods fluctuates rapidly.',
+      'Design studios producing luxury navigation systems and refined interior modules. Demand for luxury goods fluctuates rapidly.',
     'GATEFORGE BASTION':
-        'Dry docks specializing in vessel reinforcement and expanded cargo structures for long-range operations.',
+      'Dry docks specializing in vessel reinforcement and expanded cargo structures for long-range operations.',
     'REDHAVEN ANCHORPOINT':
-        'A docking array along unpredictable jump corridors. Supply varies with clustered arrivals. Gateway to deeper expansion.',
+      'A docking array along unpredictable jump corridors. Supply varies with clustered arrivals. Gateway to deeper expansion.',
     'STARTRAIL EXPANSE':
-        'Exploratory settlement beyond established hubs. Minimal infrastructure means supply cycles are smaller and prices shift rapidly.',
+      'Exploratory settlement beyond established hubs. Minimal infrastructure means supply cycles are smaller and prices shift rapidly.',
     'OUTERCREST NEXUS':
-        'The farthest established junction before uncharted corridors. Lean infrastructure means large shipments significantly influence prices.',
+      'The farthest established junction before uncharted corridors. Lean infrastructure means large shipments significantly influence prices.',
   };
 
   // Ship upgrade tiers: indexed by tier (0=Base, 1=Tier 1, 2=Tier 2)
@@ -465,7 +377,7 @@ class GameConstants {
       2: 1000, // Tier 2 - 2 fuel reduction total
     },
   };
-
+  
   // Ship specifications
   static const Map<String, ShipSpec> shipSpecs = {
     'CLASS-B': ShipSpec(
@@ -482,20 +394,19 @@ class GameConstants {
       cargoCapacity: 40,
       baseCost: 14000,
       resaleValue: 7500,
-      description:
-          'Advanced trader vessel with enhanced capacity and integrated Computer systems (T1+T2).',
+      description: 'Advanced trader vessel with enhanced capacity and integrated Computer systems (T1+T2).',
       includesComputerT1: true,
       includesComputerT2: true,
     ),
   };
-
+  
   // Computer upgrade descriptions
   static const Map<int, String> computerUpgradeDescriptions = {
     0: 'No computer system installed',
     1: 'TRIP command - Display fuel required to any destination',
     2: 'MARKET command - View market prices at any system remotely',
   };
-
+  
   // Engine upgrade descriptions
   static const Map<int, String> engineUpgradeDescriptions = {
     0: 'Standard engine efficiency',
@@ -521,6 +432,7 @@ class GameConstants {
     }
     return level;
   }
+<<<<<<< HEAD
 
   // Unlock tier helpers with hysteresis and discovery model
   // Tier access thresholds (percentage-based)
@@ -697,6 +609,43 @@ class GameConstants {
     return 0;
   }
 
+=======
+  
+  // Unlock tier helpers - based on CURRENT balance, not highest
+  static bool isTier1Unlocked(int currentCredits) => currentCredits >= unlockTier1Credits;
+  static bool isTier2Unlocked(int currentCredits) => currentCredits >= unlockTier2Credits;
+  static bool isTier3Unlocked(int currentCredits) => currentCredits >= unlockTier3Credits;
+  static bool isTier4Unlocked(int currentCredits) => currentCredits >= unlockTier4Credits;
+  
+  static bool isSystemUnlocked(String systemId, int currentCredits) {
+    if (innerRingPlanetIds.contains(systemId)) return true;
+    if (tier1PlanetIds.contains(systemId)) return isTier1Unlocked(currentCredits);
+    if (tier2PlanetIds.contains(systemId)) return isTier2Unlocked(currentCredits);
+    if (tier3PlanetIds.contains(systemId)) return isTier3Unlocked(currentCredits);
+    if (tier4PlanetIds.contains(systemId)) return isTier4Unlocked(currentCredits);
+    return false;
+  }
+  
+  static bool isCommodityUnlocked(String commodityId, int currentCredits) {
+    if (baseCommodityIds.contains(commodityId)) return true;
+    if (tier1CommodityIds.contains(commodityId)) return isTier1Unlocked(currentCredits);
+    if (tier2CommodityIds.contains(commodityId)) return isTier2Unlocked(currentCredits);
+    return false;
+  }
+  
+  static bool isComputerUpgradeUnlocked(int currentCredits) => isTier1Unlocked(currentCredits);
+  static bool isEngineUpgradeUnlocked(int currentCredits) => isTier2Unlocked(currentCredits);
+  static bool isClassCShipUnlocked(int currentCredits) => isTier3Unlocked(currentCredits);
+  
+  static List<String> getAvailableSystems(int currentCredits) {
+    return planetIds.where((id) => isSystemUnlocked(id, currentCredits)).toList();
+  }
+  
+  static List<String> getAvailableCommodities(int currentCredits) {
+    return itemIds.where((id) => isCommodityUnlocked(id, currentCredits)).toList();
+  }
+  
+>>>>>>> parent of f10338a (Fix CI workflows and format code)
   // Calculate actual fuel cost with engine upgrades applied
   // Returns at least minFuelPerTrip (minimum floor)
   static int calculateFuelCost(String from, String to, int engineTier) {

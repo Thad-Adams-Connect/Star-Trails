@@ -211,8 +211,7 @@ void main() {
       final provider = GameProvider();
       await provider.processCommand('status');
       final log = provider.state.log;
-      expect(
-          log.any((line) => line.contains('LOCATION: HELIOS REACH')), isTrue);
+      expect(log.any((line) => line.contains('LOCATION: HELIOS REACH')), isTrue);
       expect(
           log.any((line) => line.contains(
               'FUEL: ${GameConstants.initialFuel}/${provider.state.getFuelCapacity()}')),
@@ -342,9 +341,7 @@ void main() {
       expect(dropped.unlockedLevel, equals(levelAtPeak));
     });
 
-    test(
-        'level unlocks are based on highest on-hand credits, not lifetime earnings',
-        () {
+    test('level unlocks are based on highest on-hand credits, not lifetime earnings', () {
       final state = GameState.initial().copyWith(
         credits: 900,
         totalCreditsEarned: 50000,
@@ -352,10 +349,8 @@ void main() {
       );
 
       expect(state.highestCreditsReached, equals(GameConstants.initialCredits));
-      expect(
-          state.unlockedLevel,
-          equals(GameConstants.getUnlockedLevelForHighestCredits(
-              GameConstants.initialCredits)));
+      expect(state.unlockedLevel,
+          equals(GameConstants.getUnlockedLevelForHighestCredits(GameConstants.initialCredits)));
     });
 
     test('final milestone is reached at 25000 on-hand credits', () {
@@ -363,8 +358,7 @@ void main() {
 
       expect(state.reachedFinalCreditMilestone, isTrue);
       expect(state.highestCreditsReached, equals(25000));
-      expect(state.unlockedLevel,
-          equals(GameConstants.creditLevelMilestones.length));
+      expect(state.unlockedLevel, equals(GameConstants.creditLevelMilestones.length));
     });
   });
 }

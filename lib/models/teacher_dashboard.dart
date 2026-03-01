@@ -148,7 +148,7 @@ class SessionRecord {
   final int durationMs;
   final int missionsCompleted;
   final int tradesCompleted;
-
+  
   // Run summary data (captured at session end)
   final int? startingCredits;
   final int? finalCredits;
@@ -240,12 +240,9 @@ class SessionRecord {
       startingCredits: startingCredits ?? this.startingCredits,
       finalCredits: finalCredits ?? this.finalCredits,
       totalFuelUsed: totalFuelUsed ?? this.totalFuelUsed,
-      totalCreditsSpentOnFuel:
-          totalCreditsSpentOnFuel ?? this.totalCreditsSpentOnFuel,
-      totalCreditsSpentOnGoods:
-          totalCreditsSpentOnGoods ?? this.totalCreditsSpentOnGoods,
-      totalCreditsSpentOnUpgrades:
-          totalCreditsSpentOnUpgrades ?? this.totalCreditsSpentOnUpgrades,
+      totalCreditsSpentOnFuel: totalCreditsSpentOnFuel ?? this.totalCreditsSpentOnFuel,
+      totalCreditsSpentOnGoods: totalCreditsSpentOnGoods ?? this.totalCreditsSpentOnGoods,
+      totalCreditsSpentOnUpgrades: totalCreditsSpentOnUpgrades ?? this.totalCreditsSpentOnUpgrades,
       totalCreditsEarned: totalCreditsEarned ?? this.totalCreditsEarned,
     );
   }

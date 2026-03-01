@@ -32,11 +32,14 @@ class _LogbookScreenState extends State<LogbookScreen> {
       deviceId: dashboardData.deviceId,
     );
     final reflectionsBySession = <String, List<ReflectionRecord>>{
-      for (final group in reflectionGroups) group.sessionId: group.reflections,
+      for (final group in reflectionGroups)
+        group.sessionId: group.reflections,
     };
     final systemEntriesBySession = <String, List<SystemEntryRecord>>{};
     for (final entry in dashboardData.systemEntries) {
-      systemEntriesBySession.putIfAbsent(entry.sessionId, () => []).add(entry);
+      systemEntriesBySession
+          .putIfAbsent(entry.sessionId, () => [])
+          .add(entry);
     }
     for (final entries in systemEntriesBySession.values) {
       entries.sort((a, b) => a.timestamp.compareTo(b.timestamp));
@@ -174,8 +177,7 @@ class _LogbookScreenState extends State<LogbookScreen> {
     );
   }
 
-  Future<void> _editReflection(
-      BuildContext context, ReflectionRecord reflection) async {
+  Future<void> _editReflection(BuildContext context, ReflectionRecord reflection) async {
     final navigator = Navigator.of(context);
     final provider = context.read<GameProvider>();
     final result = await navigator.push<String>(
@@ -358,8 +360,9 @@ class _ReflectionLineItem extends StatelessWidget {
     final question = reflection.question.trim().isEmpty
         ? '(No reflection question)'
         : reflection.question;
-    final answer =
-        reflection.answer.trim().isEmpty ? '(No answer)' : reflection.answer;
+    final answer = reflection.answer.trim().isEmpty
+        ? '(No answer)'
+        : reflection.answer;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -522,13 +525,11 @@ class _EditReflectionScreenState extends State<_EditReflectionScreen> {
                                         color: AppTheme.phosphorGreenDim,
                                       ),
                                       filled: true,
-                                      fillColor:
-                                          Colors.black.withValues(alpha: 0.5),
+                                      fillColor: Colors.black.withValues(alpha: 0.5),
                                       border: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(6),
                                         borderSide: BorderSide(
-                                          color: AppTheme.phosphorGreen
-                                              .withValues(alpha: 0.6),
+                                          color: AppTheme.phosphorGreen.withValues(alpha: 0.6),
                                         ),
                                       ),
                                       enabledBorder: OutlineInputBorder(
@@ -560,27 +561,21 @@ class _EditReflectionScreenState extends State<_EditReflectionScreen> {
                                         ),
                                         decoration: BoxDecoration(
                                           color: _saving
-                                              ? AppTheme.phosphorGreenDim
-                                                  .withValues(alpha: 0.2)
-                                              : AppTheme.phosphorGreenDim
-                                                  .withValues(alpha: 0.3),
-                                          borderRadius:
-                                              BorderRadius.circular(6),
+                                              ? AppTheme.phosphorGreenDim.withValues(alpha: 0.2)
+                                              : AppTheme.phosphorGreenDim.withValues(alpha: 0.3),
+                                          borderRadius: BorderRadius.circular(6),
                                           border: Border.all(
                                             color: _saving
                                                 ? AppTheme.phosphorGreenDim
-                                                : AppTheme.phosphorGreen
-                                                    .withValues(alpha: 0.6),
+                                                : AppTheme.phosphorGreen.withValues(alpha: 0.6),
                                             width: 1,
                                           ),
                                           boxShadow: _saving
                                               ? []
                                               : [
                                                   BoxShadow(
-                                                    color: AppTheme
-                                                        .phosphorGreen
-                                                        .withValues(
-                                                            alpha: 0.15),
+                                                    color: AppTheme.phosphorGreen
+                                                        .withValues(alpha: 0.15),
                                                     blurRadius: 6,
                                                   ),
                                                 ],
@@ -590,18 +585,15 @@ class _EditReflectionScreenState extends State<_EditReflectionScreen> {
                                               ? const SizedBox(
                                                   height: 20,
                                                   width: 20,
-                                                  child:
-                                                      CircularProgressIndicator(
-                                                    color:
-                                                        AppTheme.phosphorGreen,
+                                                  child: CircularProgressIndicator(
+                                                    color: AppTheme.phosphorGreen,
                                                     strokeWidth: 2,
                                                   ),
                                                 )
                                               : const Text(
                                                   'SAVE',
                                                   style: TextStyle(
-                                                    color: AppTheme
-                                                        .phosphorGreenBright,
+                                                    color: AppTheme.phosphorGreenBright,
                                                     fontWeight: FontWeight.bold,
                                                     fontFamily: 'monospace',
                                                     fontSize: 16,
