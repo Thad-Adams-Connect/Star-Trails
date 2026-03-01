@@ -342,7 +342,6 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                       ),
                     ),
                   ),
-                  if (provider.showEduPrompt) _buildEduPrompt(provider),
                 ],
               );
             },
@@ -559,83 +558,6 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
           ),
         );
       },
-    );
-  }
-
-  Widget _buildEduPrompt(GameProvider provider) {
-    return Container(
-      color: Colors.black87,
-      child: Center(
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Container(
-              margin: const EdgeInsets.all(24),
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.9),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: AppTheme.phosphorGreenBright.withValues(alpha: 0.8),
-                  width: 2,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppTheme.phosphorGreen.withValues(alpha: 0.2),
-                    blurRadius: 12,
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.lightbulb_outline,
-                      color: Colors.amber, size: 48),
-                  const SizedBox(height: 16),
-                  Text(
-                    provider.currentEduPrompt,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 20),
-                  Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: provider.dismissEduPrompt,
-                      borderRadius: BorderRadius.circular(6),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 12),
-                        decoration: BoxDecoration(
-                          color:
-                              AppTheme.phosphorGreenDim.withValues(alpha: 0.3),
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(
-                            color:
-                                AppTheme.phosphorGreen.withValues(alpha: 0.6),
-                            width: 1,
-                          ),
-                        ),
-                        child: const Text(
-                          'GOT IT',
-                          style: TextStyle(
-                            color: AppTheme.phosphorGreenBright,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'monospace',
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 

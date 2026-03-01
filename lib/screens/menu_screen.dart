@@ -39,7 +39,6 @@ class _MenuScreenState extends State<MenuScreen> {
   Future<void> _checkSave() async {
     if (!mounted) return;
     final provider = context.read<GameProvider>();
-    await provider.loadSettings();
     final loaded = await provider.loadGame();
     if (!mounted) return;
     setState(() {

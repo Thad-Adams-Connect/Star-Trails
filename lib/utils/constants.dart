@@ -522,61 +522,179 @@ class GameConstants {
     return level;
   }
 
-  // Unlock tier helpers - based on CURRENT balance, not highest
-  static bool isTier1Unlocked(int currentCredits) =>
-      currentCredits >= unlockTier1Credits;
-  static bool isTier2Unlocked(int currentCredits) =>
-      currentCredits >= unlockTier2Credits;
-  static bool isTier3Unlocked(int currentCredits) =>
-      currentCredits >= unlockTier3Credits;
-  static bool isTier4Unlocked(int currentCredits) =>
-      currentCredits >= unlockTier4Credits;
+  // Unlock tier helpers with hysteresis and discovery model
+  // Tier access thresholds (percentage-based)
+  static const double lockThresholdPercent = 0.60; // Deactivate below 60% of milestone
+  static const double reactivateThresholdPercent = 0.80; // Reactivate at 80% if previously lost
+  static const Map<int, int> tierMilestones = {
+    1: unlockTier1Credits,
+    2: unlockTier2Credits,
+    3: unlockTier3Credits,
+    4: unlockTier4Credits,
+  };
 
-  static bool isSystemUnlocked(String systemId, int currentCredits) {
+  /// Check if a tier should be discovered based on reaching its threshold
+  static bool shouldDiscoverTier(int tierNumber, int currentCredits) {
+    final threshold = tierMilestones[tierNumber];
+    if (threshold == null) return false;
+    return currentCredits >= threshold;
+  }
+
+  /// Calculate whether tier access should be active based on hysteresis model
+  /// - First activation: credits >= 100% of milestone
+  /// - Deactivation: credits < 60% of milestone
+  /// - Reactivation: credits >= 80% of milestone (if previously deactivated)
+  static bool calculateTierAccess({
+    required int tierNumber,
+    required int currentCredits,
+    required bool wasDeactivated,
+    required bool currentlyActive,
+  }) {
+    final threshold = tierMilestones[tierNumber];
+    if (threshold == null) return false;
+
+    final lockThreshold = (threshold * lockThresholdPercent).floor();
+    final reactivateThreshold = (threshold * reactivateThresholdPercent).floor();
+
+    // Can never access tier higher than milestone
+    if (currentCredits < threshold && !currentlyActive && !wasDeactivated) {
+      return false;
+    }
+
+    // Already active: check for deactivation
+    if (currentlyActive) {
+      return currentCredits >= lockThreshold;
+    }
+
+    // Previously deactivated: check for reactivation
+    if (wasDeactivated) {
+      return currentCredits >= reactivateThreshold;
+    }
+
+    // Never activated before: check for activation
+    return currentCredits >= threshold;
+  }
+
+  // Tier access helpers - work with TierState objects  
+  static bool isTier1Active(Map<int, dynamic> tierStates) {
+    final state = tierStates[1];
+    if (state == null) return false;
+    if (state is bool) return state;
+    return state.discovered && state.accessActive;
+  }
+
+  static bool isTier2Active(Map<int, dynamic> tierStates) {
+    final state = tierStates[2];
+    if (state == null) return false;
+    if (state is bool) return state;
+    return state.discovered && state.accessActive;
+  }
+
+  static bool isTier3Active(Map<int, dynamic> tierStates) {
+    final state = tierStates[3];
+    if (state == null) return false;
+    if (state is bool) return state;
+    return state.discovered && state.accessActive;
+  }
+
+  static bool isTier4Active(Map<int, dynamic> tierStates) {
+    final state = tierStates[4];
+    if (state == null) return false;
+    if (state is bool) return state;
+    return state.discovered && state.accessActive;
+  }
+
+  // Check if a tier was ever discovered (commodities from discovered tiers stay available)
+  static bool isTier1Discovered(Map<int, dynamic> tierStates) {
+    final state = tierStates[1];
+    if (state == null) return false;
+    if (state is bool) return state;
+    return state.discovered;
+  }
+
+  static bool isTier2Discovered(Map<int, dynamic> tierStates) {
+    final state = tierStates[2];
+    if (state == null) return false;
+    if (state is bool) return state;
+    return state.discovered;
+  }
+
+  static bool isTier3Discovered(Map<int, dynamic> tierStates) {
+    final state = tierStates[3];
+    if (state == null) return false;
+    if (state is bool) return state;
+    return state.discovered;
+  }
+
+  static bool isTier4Discovered(Map<int, dynamic> tierStates) {
+    final state = tierStates[4];
+    if (state == null) return false;
+    if (state is bool) return state;
+    return state.discovered;
+  }
+
+  /// Check if a system is currently accessible
+  /// Systems require tier access to be ACTIVE (can be deactivated if credits drop)
+  /// This is different from commodities which stay accessible once discovered
+  static bool isSystemUnlocked(String systemId, Map<int, dynamic> tierStates) {
     if (innerRingPlanetIds.contains(systemId)) return true;
     if (tier1PlanetIds.contains(systemId)) {
-      return isTier1Unlocked(currentCredits);
+      return isTier1Active(tierStates);
     }
     if (tier2PlanetIds.contains(systemId)) {
-      return isTier2Unlocked(currentCredits);
+      return isTier2Active(tierStates);
     }
     if (tier3PlanetIds.contains(systemId)) {
-      return isTier3Unlocked(currentCredits);
+      return isTier3Active(tierStates);
     }
     if (tier4PlanetIds.contains(systemId)) {
-      return isTier4Unlocked(currentCredits);
+      return isTier4Active(tierStates);
     }
     return false;
   }
 
-  static bool isCommodityUnlocked(String commodityId, int currentCredits) {
+  /// Check if a commodity is available for trading
+  /// Commodities stay unlocked once their tier is discovered, even if tier access is lost
+  /// This is different from systems which can become inaccessible when tier access is lost
+  static bool isCommodityUnlocked(String commodityId, Map<int, dynamic> tierStates) {
     if (baseCommodityIds.contains(commodityId)) return true;
     if (tier1CommodityIds.contains(commodityId)) {
-      return isTier1Unlocked(currentCredits);
+      return isTier1Discovered(tierStates);
     }
     if (tier2CommodityIds.contains(commodityId)) {
-      return isTier2Unlocked(currentCredits);
+      return isTier2Discovered(tierStates);
     }
     return false;
   }
 
-  static bool isComputerUpgradeUnlocked(int currentCredits) =>
-      isTier1Unlocked(currentCredits);
-  static bool isEngineUpgradeUnlocked(int currentCredits) =>
-      isTier2Unlocked(currentCredits);
-  static bool isClassCShipUnlocked(int currentCredits) =>
-      isTier3Unlocked(currentCredits);
+  static bool isComputerUpgradeUnlocked(Map<int, dynamic> tierStates) =>
+      isTier1Active(tierStates);
+  static bool isEngineUpgradeUnlocked(Map<int, dynamic> tierStates) =>
+      isTier2Active(tierStates);
+  static bool isClassCShipUnlocked(Map<int, dynamic> tierStates) =>
+      isTier3Active(tierStates);
 
-  static List<String> getAvailableSystems(int currentCredits) {
+  static List<String> getAvailableSystems(Map<int, dynamic> tierStates) {
     return planetIds
-        .where((id) => isSystemUnlocked(id, currentCredits))
+        .where((id) => isSystemUnlocked(id, tierStates))
         .toList();
   }
 
-  static List<String> getAvailableCommodities(int currentCredits) {
+  static List<String> getAvailableCommodities(Map<int, dynamic> tierStates) {
     return itemIds
-        .where((id) => isCommodityUnlocked(id, currentCredits))
+        .where((id) => isCommodityUnlocked(id, tierStates))
         .toList();
+  }
+
+  /// Identify which tier (if any) a system belongs to
+  /// Returns the tier number (1-4) or 0 if it's an inner ring system
+  static int getSystemTier(String systemId) {
+    if (innerRingPlanetIds.contains(systemId)) return 0;
+    if (tier1PlanetIds.contains(systemId)) return 1;
+    if (tier2PlanetIds.contains(systemId)) return 2;
+    if (tier3PlanetIds.contains(systemId)) return 3;
+    if (tier4PlanetIds.contains(systemId)) return 4;
+    return 0;
   }
 
   // Calculate actual fuel cost with engine upgrades applied
