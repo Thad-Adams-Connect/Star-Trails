@@ -13,6 +13,8 @@ class PersistenceService {
   static const String _checksumKey = 'game_checksum';
   static const String _eduPromptsKey = 'edu_prompts_enabled';
   static const String _reflectionEnabledKey = 'reflection_enabled';
+  static const String _narrativeTextSpeedKey =
+      'narrative_text_speed_multiplier';
 
   Future<bool> saveGameState(GameState state) async {
     try {
@@ -76,5 +78,20 @@ class PersistenceService {
   Future<bool> getReflectionEnabled() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_reflectionEnabledKey) ?? true;
+  }
+
+  Future<void> setNarrativeTextSpeedMultiplier(double multiplier) async {
+    final prefs = await SharedPreferences.getInstance();
+    final normalized = multiplier.clamp(0.5, 2.0).toDouble();
+    await prefs.setDouble(_narrativeTextSpeedKey, normalized);
+  }
+
+  Future<double> getNarrativeTextSpeedMultiplier() async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getDouble(_narrativeTextSpeedKey);
+    if (saved == null) {
+      return 1.0;
+    }
+    return saved.clamp(0.5, 2.0).toDouble();
   }
 }

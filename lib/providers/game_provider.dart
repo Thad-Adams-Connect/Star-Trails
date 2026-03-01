@@ -19,6 +19,10 @@ class GameProvider extends ChangeNotifier {
   static const Duration _introLineDelay = Duration(milliseconds: 750);
   static const Duration _introSectionDelay = Duration(milliseconds: 750);
   static const Duration _introHeadingDelay = Duration(milliseconds: 1200);
+  static const double _narrativeSpeedMin = 0.5;
+  static const double _narrativeSpeedMax = 2.0;
+  static const double _narrativeSpeedStep = 0.25;
+  static const double _defaultNarrativeSpeed = 1.0;
   static const Set<String> _introMajorHeadings = <String>{
     'Your Ship',
     'What You Know',
@@ -32,6 +36,7 @@ class GameProvider extends ChangeNotifier {
   bool _sessionIsGameOver = false;
   bool _eduPromptsEnabled = true;
   bool _reflectionEnabled = true;
+  double _narrativeTextSpeedMultiplier = _defaultNarrativeSpeed;
   bool _showEduPrompt = false;
   String _currentEduPrompt = '';
   bool _saving = false;
@@ -46,6 +51,7 @@ class GameProvider extends ChangeNotifier {
   GameState get state => _state;
   bool get eduPromptsEnabled => _eduPromptsEnabled;
   bool get reflectionEnabled => _reflectionEnabled;
+  double get narrativeTextSpeedMultiplier => _narrativeTextSpeedMultiplier;
   bool get showEduPrompt => _showEduPrompt;
   String get currentEduPrompt => _currentEduPrompt;
   TeacherDashboardService get dashboard => _dashboard;
@@ -89,6 +95,9 @@ class GameProvider extends ChangeNotifier {
   Future<void> loadSettings() async {
     _eduPromptsEnabled = await _persistence.getEduPromptsEnabled();
     _reflectionEnabled = await _persistence.getReflectionEnabled();
+    _narrativeTextSpeedMultiplier = _normalizeNarrativeSpeed(
+      await _persistence.getNarrativeTextSpeedMultiplier(),
+    );
     notifyListeners();
   }
 
@@ -101,6 +110,13 @@ class GameProvider extends ChangeNotifier {
   Future<void> setReflectionEnabled(bool enabled) async {
     _reflectionEnabled = enabled;
     await _persistence.setReflectionEnabled(enabled);
+    notifyListeners();
+  }
+
+  Future<void> setNarrativeTextSpeedMultiplier(double multiplier) async {
+    final normalized = _normalizeNarrativeSpeed(multiplier);
+    _narrativeTextSpeedMultiplier = normalized;
+    await _persistence.setNarrativeTextSpeedMultiplier(normalized);
     notifyListeners();
   }
 
@@ -1090,7 +1106,7 @@ class GameProvider extends ChangeNotifier {
   /// Start the intro typewriter sequence.
   void startIntroTypewriter() {
     _introTimer?.cancel();
-    _scheduleNextIntroCharacter();
+    _scheduleNextIntroCharacter(_scaledTypewriterDelay(_introCharDelay));
   }
 
   void _scheduleNextIntroCharacter([Duration delay = _introCharDelay]) {
@@ -1130,25 +1146,41 @@ class GameProvider extends ChangeNotifier {
 
   Duration _nextIntroDelay(String introText, int charIndexJustTyped) {
     if (charIndexJustTyped < 0 || charIndexJustTyped >= introText.length) {
-      return _introCharDelay;
+      return _scaledTypewriterDelay(_introCharDelay);
     }
 
     final typedChar = introText[charIndexJustTyped];
     if (typedChar != '\n') {
-      return _introCharDelay;
+      return _scaledTypewriterDelay(_introCharDelay);
     }
 
     final completedLine =
         _lineEndingAtNewline(introText, charIndexJustTyped).trimRight();
     if (_introMajorHeadings.contains(completedLine)) {
-      return _introHeadingDelay;
+      return _scaledTypewriterDelay(_introHeadingDelay);
     }
 
     if (completedLine.isEmpty) {
-      return _introSectionDelay;
+      return _scaledTypewriterDelay(_introSectionDelay);
     }
 
-    return _introLineDelay;
+    return _scaledTypewriterDelay(_introLineDelay);
+  }
+
+  double _normalizeNarrativeSpeed(double value) {
+    final clamped =
+        value.clamp(_narrativeSpeedMin, _narrativeSpeedMax).toDouble();
+    final steps =
+        ((clamped - _narrativeSpeedMin) / _narrativeSpeedStep).round();
+    final normalized = _narrativeSpeedMin + (steps * _narrativeSpeedStep);
+    return normalized.clamp(_narrativeSpeedMin, _narrativeSpeedMax).toDouble();
+  }
+
+  Duration _scaledTypewriterDelay(Duration baseDelay) {
+    final scaledMicroseconds =
+        (baseDelay.inMicroseconds / _narrativeTextSpeedMultiplier).round();
+    final safeMicroseconds = scaledMicroseconds < 1 ? 1 : scaledMicroseconds;
+    return Duration(microseconds: safeMicroseconds);
   }
 
   String _lineEndingAtNewline(String text, int newlineIndex) {
@@ -1249,7 +1281,7 @@ class GameProvider extends ChangeNotifier {
 
     _narrativeTimer?.cancel();
     _prepareLogForNarrative();
-    _scheduleNextNarrativeCharacter();
+    _scheduleNextNarrativeCharacter(_scaledTypewriterDelay(_introCharDelay));
   }
 
   void _scheduleNextNarrativeCharacter([Duration delay = _introCharDelay]) {
@@ -1394,7 +1426,7 @@ class GameProvider extends ChangeNotifier {
           narrativeSystemId: systemId,
         ),
         notify: true);
-    _scheduleNextNarrativeCharacter();
+    _scheduleNextNarrativeCharacter(_scaledTypewriterDelay(_introCharDelay));
   }
 
   void _prepareLogForNarrative() {

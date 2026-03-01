@@ -116,6 +116,19 @@ class SettingsScreen extends StatelessWidget {
                                       onChanged: (value) =>
                                           provider.setReflectionEnabled(value),
                                     ),
+                                    const SizedBox(height: 14),
+                                    _buildNarrativeTextSpeedTile(
+                                      context,
+                                      icon: Icons.speed,
+                                      title: 'Narrative Text Speed',
+                                      subtitle:
+                                          'Adjust typing speed for intro and system history text',
+                                      value:
+                                          provider.narrativeTextSpeedMultiplier,
+                                      onChanged: (value) => provider
+                                          .setNarrativeTextSpeedMultiplier(
+                                              value),
+                                    ),
                                   ],
                                 ),
                               ],
@@ -266,6 +279,113 @@ class SettingsScreen extends StatelessWidget {
           _RectToggleButton(
             value: value,
             onChanged: onChanged,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNarrativeTextSpeedTile(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required double value,
+    required ValueChanged<double> onChanged,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.phosphorGreenDim.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: AppTheme.phosphorGreen.withValues(alpha: 0.5),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.phosphorGreen.withValues(alpha: 0.08),
+            blurRadius: 6,
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: AppTheme.phosphorGreenBright),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: AppTheme.phosphorGreenDim.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: AppTheme.phosphorGreen.withValues(alpha: 0.6),
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.phosphorGreen.withValues(alpha: 0.15),
+                      blurRadius: 6,
+                    ),
+                  ],
+                ),
+                child: Text(
+                  '${value.toStringAsFixed(2)}x',
+                  style: const TextStyle(
+                    color: AppTheme.phosphorGreenBright,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'monospace',
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              activeTrackColor: AppTheme.phosphorGreenBright,
+              inactiveTrackColor:
+                  AppTheme.phosphorGreen.withValues(alpha: 0.35),
+              thumbColor: AppTheme.phosphorGreenBright,
+              overlayColor: AppTheme.phosphorGreen.withValues(alpha: 0.15),
+              trackHeight: 6,
+            ),
+            child: Slider(
+              value: value,
+              min: 0.5,
+              max: 2.0,
+              divisions: 6,
+              onChanged: onChanged,
+            ),
           ),
         ],
       ),
