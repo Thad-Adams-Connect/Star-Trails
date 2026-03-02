@@ -4,6 +4,7 @@
 // Unauthorized copying, modification, distribution, or reverse engineering prohibited.
 
 import '../models/ship_upgrade.dart';
+import '../models/cr_access_state.dart';
 
 class MarketItemPrice {
   final int buy;
@@ -17,13 +18,10 @@ class GameConstants {
   static const int initialCredits = 1000;
   static const int finalCreditMilestone = 25000;
   static const List<int> creditLevelMilestones = [
-    1000,
-    2500,
-    5000,
-    10000,
-    15000,
-    20000,
-    finalCreditMilestone,
+    5000,   // Tier 1 unlock threshold
+    10000,  // Tier 2 unlock threshold
+    18000,  // Tier 3 unlock threshold
+    25000,  // Tier 4 unlock threshold (final milestone)
   ];
 
   // Credit progression unlock thresholds
@@ -522,64 +520,74 @@ class GameConstants {
     return level;
   }
 
-  // Unlock tier helpers - based on CURRENT balance, not highest
-  static bool isTier1Unlocked(int currentCredits) =>
-      currentCredits >= unlockTier1Credits;
-  static bool isTier2Unlocked(int currentCredits) =>
-      currentCredits >= unlockTier2Credits;
-  static bool isTier3Unlocked(int currentCredits) =>
-      currentCredits >= unlockTier3Credits;
-  static bool isTier4Unlocked(int currentCredits) =>
-      currentCredits >= unlockTier4Credits;
+  // System access helpers - based on accessActive state (with hysteresis)
+  static bool isTier1SystemActive(Map<String, CRAccessState> tierAccessStates) =>
+      tierAccessStates['1']?.accessActive ?? false;
+  static bool isTier2SystemActive(Map<String, CRAccessState> tierAccessStates) =>
+      tierAccessStates['2']?.accessActive ?? false;
+  static bool isTier3SystemActive(Map<String, CRAccessState> tierAccessStates) =>
+      tierAccessStates['3']?.accessActive ?? false;
+  static bool isTier4SystemActive(Map<String, CRAccessState> tierAccessStates) =>
+      tierAccessStates['4']?.accessActive ?? false;
 
-  static bool isSystemUnlocked(String systemId, int currentCredits) {
+  // Commodity/Upgrade helpers - based on discovered state (permanent once unlocked)
+  static bool isTier1Discovered(Map<String, CRAccessState> tierAccessStates) =>
+      tierAccessStates['1']?.discovered ?? false;
+  static bool isTier2Discovered(Map<String, CRAccessState> tierAccessStates) =>
+      tierAccessStates['2']?.discovered ?? false;
+  static bool isTier3Discovered(Map<String, CRAccessState> tierAccessStates) =>
+      tierAccessStates['3']?.discovered ?? false;
+  static bool isTier4Discovered(Map<String, CRAccessState> tierAccessStates) =>
+      tierAccessStates['4']?.discovered ?? false;
+
+  static bool isSystemUnlocked(String systemId, Map<String, CRAccessState> tierAccessStates) {
     if (innerRingPlanetIds.contains(systemId)) {
       return true;
     }
     if (tier1PlanetIds.contains(systemId)) {
-      return isTier1Unlocked(currentCredits);
+      return isTier1SystemActive(tierAccessStates);
     }
     if (tier2PlanetIds.contains(systemId)) {
-      return isTier2Unlocked(currentCredits);
+      return isTier2SystemActive(tierAccessStates);
     }
     if (tier3PlanetIds.contains(systemId)) {
-      return isTier3Unlocked(currentCredits);
+      return isTier3SystemActive(tierAccessStates);
     }
     if (tier4PlanetIds.contains(systemId)) {
-      return isTier4Unlocked(currentCredits);
+      return isTier4SystemActive(tierAccessStates);
     }
     return false;
   }
 
-  static bool isCommodityUnlocked(String commodityId, int currentCredits) {
+  static bool isCommodityUnlocked(String commodityId, Map<String, CRAccessState> tierAccessStates) {
     if (baseCommodityIds.contains(commodityId)) {
       return true;
     }
     if (tier1CommodityIds.contains(commodityId)) {
-      return isTier1Unlocked(currentCredits);
+      return isTier1Discovered(tierAccessStates);
     }
     if (tier2CommodityIds.contains(commodityId)) {
-      return isTier2Unlocked(currentCredits);
+      return isTier2Discovered(tierAccessStates);
     }
     return false;
   }
 
-  static bool isComputerUpgradeUnlocked(int currentCredits) =>
-      isTier1Unlocked(currentCredits);
-  static bool isEngineUpgradeUnlocked(int currentCredits) =>
-      isTier2Unlocked(currentCredits);
-  static bool isClassCShipUnlocked(int currentCredits) =>
-      isTier3Unlocked(currentCredits);
+  static bool isComputerUpgradeUnlocked(Map<String, CRAccessState> tierAccessStates) =>
+      isTier1Discovered(tierAccessStates);
+  static bool isEngineUpgradeUnlocked(Map<String, CRAccessState> tierAccessStates) =>
+      isTier2Discovered(tierAccessStates);
+  static bool isClassCShipUnlocked(Map<String, CRAccessState> tierAccessStates) =>
+      isTier3Discovered(tierAccessStates);
 
-  static List<String> getAvailableSystems(int currentCredits) {
+  static List<String> getAvailableSystems(Map<String, CRAccessState> tierAccessStates) {
     return planetIds
-        .where((id) => isSystemUnlocked(id, currentCredits))
+        .where((id) => isSystemUnlocked(id, tierAccessStates))
         .toList();
   }
 
-  static List<String> getAvailableCommodities(int currentCredits) {
+  static List<String> getAvailableCommodities(Map<String, CRAccessState> tierAccessStates) {
     return itemIds
-        .where((id) => isCommodityUnlocked(id, currentCredits))
+        .where((id) => isCommodityUnlocked(id, tierAccessStates))
         .toList();
   }
 

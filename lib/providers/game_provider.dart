@@ -411,10 +411,10 @@ class GameProvider extends ChangeNotifier {
 
     // Build dynamic upgrade types list based on unlocks
     final upgradeTypes = <String>['fuel', 'cargo'];
-    if (GameConstants.isComputerUpgradeUnlocked(_state.credits)) {
+    if (GameConstants.isComputerUpgradeUnlocked(_state.tierAccessStates)) {
       upgradeTypes.add('computer');
     }
-    if (GameConstants.isEngineUpgradeUnlocked(_state.credits)) {
+    if (GameConstants.isEngineUpgradeUnlocked(_state.tierAccessStates)) {
       upgradeTypes.add('engine');
     }
     _addLog(
@@ -429,18 +429,18 @@ class GameProvider extends ChangeNotifier {
       _addLog('  market <system> - show market at remote system');
     }
 
-    if (GameConstants.isClassCShipUnlocked(_state.credits) &&
+    if (GameConstants.isClassCShipUnlocked(_state.tierAccessStates) &&
         _state.shipClass == 'CLASS-B') {
-      _addLog('  ship buy - purchase CLASS-C ship (at HELIOS REACH)');
+      _addLog('  buy ship - purchase CLASS-C ship (at HELIOS REACH)');
     }
 
     _addLog('  end - end current run');
     _addLog('');
 
     // Show only unlocked systems and commodities
-    final availableSystems = GameConstants.getAvailableSystems(_state.credits);
+    final availableSystems = GameConstants.getAvailableSystems(_state.tierAccessStates);
     final availableCommodities =
-        GameConstants.getAvailableCommodities(_state.credits);
+        GameConstants.getAvailableCommodities(_state.tierAccessStates);
 
     _addLog('SYSTEMS: ${availableSystems.join(", ")}');
     _addLog('ITEMS: ${availableCommodities.join(", ")}');
@@ -464,10 +464,10 @@ class GameProvider extends ChangeNotifier {
 
     // Build dynamic upgrade types list based on unlocks
     final upgradeTypes = <String>['fuel', 'cargo'];
-    if (GameConstants.isComputerUpgradeUnlocked(_state.credits)) {
+    if (GameConstants.isComputerUpgradeUnlocked(_state.tierAccessStates)) {
       upgradeTypes.add('computer');
     }
-    if (GameConstants.isEngineUpgradeUnlocked(_state.credits)) {
+    if (GameConstants.isEngineUpgradeUnlocked(_state.tierAccessStates)) {
       upgradeTypes.add('engine');
     }
     _addLog(
@@ -482,18 +482,18 @@ class GameProvider extends ChangeNotifier {
       _addLog('  market <system> - show market at remote system');
     }
 
-    if (GameConstants.isClassCShipUnlocked(_state.credits) &&
+    if (GameConstants.isClassCShipUnlocked(_state.tierAccessStates) &&
         _state.shipClass == 'CLASS-B') {
-      _addLog('  ship buy - purchase CLASS-C ship (at HELIOS REACH)');
+      _addLog('  buy ship - purchase CLASS-C ship (at HELIOS REACH)');
     }
 
     _addLog('  end - end current run');
     _addLog('');
 
     // Show only unlocked systems and commodities
-    final availableSystems = GameConstants.getAvailableSystems(_state.credits);
+    final availableSystems = GameConstants.getAvailableSystems(_state.tierAccessStates);
     final availableCommodities =
-        GameConstants.getAvailableCommodities(_state.credits);
+        GameConstants.getAvailableCommodities(_state.tierAccessStates);
 
     _addLog('SYSTEMS: ${availableSystems.join(", ")}');
     _addLog('ITEMS: ${availableCommodities.join(", ")}');
@@ -535,13 +535,13 @@ class GameProvider extends ChangeNotifier {
         if (!GameConstants.planetIds.contains(systemInput)) {
           _addLog('Unknown system: $systemInput');
           final availableSystems =
-              GameConstants.getAvailableSystems(_state.credits);
+              GameConstants.getAvailableSystems(_state.tierAccessStates);
           _addLog('Available systems: ${availableSystems.join(", ")}');
           return;
         }
 
         // Check if system is unlocked
-        if (!GameConstants.isSystemUnlocked(systemInput, _state.credits)) {
+        if (!GameConstants.isSystemUnlocked(systemInput, _state.tierAccessStates)) {
           _addLog('System $systemInput is not yet unlocked.');
           return;
         }
@@ -553,7 +553,7 @@ class GameProvider extends ChangeNotifier {
         _addLog('');
 
         final availableCommodities =
-            GameConstants.getAvailableCommodities(_state.credits);
+            GameConstants.getAvailableCommodities(_state.tierAccessStates);
         for (var item in availableCommodities) {
           final baseAsk = planet.getAskPrice(item);
           final baseBid = planet.getBidPrice(item);
@@ -576,7 +576,7 @@ class GameProvider extends ChangeNotifier {
     _addLog('');
 
     final availableCommodities =
-        GameConstants.getAvailableCommodities(_state.credits);
+        GameConstants.getAvailableCommodities(_state.tierAccessStates);
     for (var item in availableCommodities) {
       final baseAsk = planet.getAskPrice(item);
       final baseBid = planet.getBidPrice(item);
@@ -598,7 +598,7 @@ class GameProvider extends ChangeNotifier {
     _addLog('CARGO (${_state.cargoUsed}/$cargoCapacity):');
 
     final availableCommodities =
-        GameConstants.getAvailableCommodities(_state.credits);
+        GameConstants.getAvailableCommodities(_state.tierAccessStates);
     for (var item in availableCommodities) {
       final qty = _state.cargo[item]!;
       _addLog('  $item: $qty');
@@ -607,14 +607,20 @@ class GameProvider extends ChangeNotifier {
   }
 
   void _handleBuy(List<String> parts) {
-    if (parts.length < 3) {
-      _addLog('Usage: buy <item> <qty>');
-      return;
-    }
-
     // Verify you are docked to buy
     if (_state.location.isEmpty) {
       _addLog('You must be docked to buy items.');
+      return;
+    }
+
+    // Check for ship purchase
+    if (parts.length >= 2 && parts[1].toLowerCase() == 'ship') {
+      _handleBuyShip();
+      return;
+    }
+
+    if (parts.length < 3) {
+      _addLog('Usage: buy <item> <qty>');
       return;
     }
 
@@ -626,7 +632,7 @@ class GameProvider extends ChangeNotifier {
     }
 
     // Check if commodity is unlocked
-    if (!GameConstants.isCommodityUnlocked(item, _state.credits)) {
+    if (!GameConstants.isCommodityUnlocked(item, _state.tierAccessStates)) {
       _addLog('$item is not yet unlocked.');
       return;
     }
@@ -689,6 +695,78 @@ class GameProvider extends ChangeNotifier {
         'You bought $item at $askPrice credits each. Can you find a planet where you can sell it for more?');
   }
 
+  void _handleBuyShip() {
+    // Purchase CLASS-C ship
+    if (!GameConstants.isClassCShipUnlocked(_state.tierAccessStates)) {
+      _addLog(
+          'CLASS-C ship unlocks at ${GameConstants.unlockTier3Credits} credits.');
+      return;
+    }
+
+    if (_state.shipClass == 'CLASS-C') {
+      _addLog('You already own a CLASS-C ship.');
+      return;
+    }
+
+    if (_state.location != 'HELIOS REACH') {
+      _addLog('Ships can only be purchased at HELIOS REACH.');
+      return;
+    }
+
+    final classCSpec = GameConstants.shipSpecs['CLASS-C']!;
+    final classBSpec = GameConstants.shipSpecs['CLASS-B']!;
+
+    // Cost is purchase price minus resale of current ship (which is 0 for CLASS-B)
+    final netCost = classCSpec.baseCost - classBSpec.resaleValue;
+
+    if (_state.credits < netCost) {
+      _addLog('Not enough credits. Need: $netCost, Have: ${_state.credits}');
+      return;
+    }
+
+    // Check if cargo would overflow
+    if (_state.cargoUsed > classCSpec.cargoCapacity) {
+      _addLog(
+          'Cannot switch ships: current cargo (${_state.cargoUsed}) exceeds CLASS-C capacity (${classCSpec.cargoCapacity}).');
+      _addLog('Sell some cargo before purchasing.');
+      return;
+    }
+
+    final newCredits = _state.credits - netCost;
+    final newFuel = _state.fuel.clamp(0, classCSpec.fuelCapacity);
+
+    // CLASS-C includes Computer T1+T2 by default
+    final newUpgrades = Map<String, ShipUpgrade>.from(_state.shipUpgrades);
+    newUpgrades['computer'] = ShipUpgrade(type: 'computer', currentTier: 2);
+
+    _updateState(
+        _state.copyWith(
+          shipClass: 'CLASS-C',
+          fuel: newFuel,
+          credits: newCredits,
+          shipUpgrades: newUpgrades,
+          totalCreditsSpentOnUpgrades:
+              _state.totalCreditsSpentOnUpgrades + netCost,
+        ),
+        notify: false);
+
+    _addLog('');
+    _addLog('═══════════════════════════');
+    _addLog('SHIP PURCHASE COMPLETE');
+    _addLog('═══════════════════════════');
+    _addLog('New ship: CLASS-C');
+    _addLog('Fuel capacity: ${classCSpec.fuelCapacity}');
+    _addLog('Cargo capacity: ${classCSpec.cargoCapacity}');
+    _addLog('Integrated systems: Advanced Computer');
+    _addLog('');
+    _addLog('Credits remaining: $newCredits');
+    _addLog('═══════════════════════════');
+    _addLog('');
+
+    _maybeShowEduPrompt(
+        'You upgraded to a CLASS-C ship! This powerful vessel gives you more capacity and includes advanced computer systems.');
+  }
+
   void _handleSell(List<String> parts) {
     if (parts.length < 3) {
       _addLog('Usage: sell <item> <qty>');
@@ -709,7 +787,7 @@ class GameProvider extends ChangeNotifier {
     }
 
     // Check if commodity is unlocked
-    if (!GameConstants.isCommodityUnlocked(item, _state.credits)) {
+    if (!GameConstants.isCommodityUnlocked(item, _state.tierAccessStates)) {
       _addLog('$item is not yet unlocked.');
       return;
     }
@@ -842,7 +920,7 @@ class GameProvider extends ChangeNotifier {
     if (parts.length < 2) {
       _addLog('Usage: travel <planet>');
       final availableSystems =
-          GameConstants.getAvailableSystems(_state.credits);
+          GameConstants.getAvailableSystems(_state.tierAccessStates);
       _addLog('Available systems: ${availableSystems.join(", ")}');
       return;
     }
@@ -854,13 +932,13 @@ class GameProvider extends ChangeNotifier {
     if (!GameConstants.planetIds.contains(destInput)) {
       _addLog('Unknown planet: $destInput');
       final availableSystems =
-          GameConstants.getAvailableSystems(_state.credits);
+          GameConstants.getAvailableSystems(_state.tierAccessStates);
       _addLog('Available systems: ${availableSystems.join(", ")}');
       return;
     }
 
     // Check if system is unlocked
-    if (!GameConstants.isSystemUnlocked(destInput, _state.credits)) {
+    if (!GameConstants.isSystemUnlocked(destInput, _state.tierAccessStates)) {
       _addLog('System $destInput is not yet unlocked.');
       _addLog('Continue trading to unlock new systems!');
       return;
@@ -923,10 +1001,10 @@ class GameProvider extends ChangeNotifier {
 
       // Build list of available upgrade types based on unlocks
       final availableTypes = <String>['fuel', 'cargo'];
-      if (GameConstants.isComputerUpgradeUnlocked(_state.credits)) {
+      if (GameConstants.isComputerUpgradeUnlocked(_state.tierAccessStates)) {
         availableTypes.add('computer');
       }
-      if (GameConstants.isEngineUpgradeUnlocked(_state.credits)) {
+      if (GameConstants.isEngineUpgradeUnlocked(_state.tierAccessStates)) {
         availableTypes.add('engine');
       }
 
@@ -942,10 +1020,10 @@ class GameProvider extends ChangeNotifier {
 
     // Build list of valid types based on unlocks
     final validTypes = <String>['fuel', 'cargo'];
-    if (GameConstants.isComputerUpgradeUnlocked(_state.credits)) {
+    if (GameConstants.isComputerUpgradeUnlocked(_state.tierAccessStates)) {
       validTypes.add('computer');
     }
-    if (GameConstants.isEngineUpgradeUnlocked(_state.credits)) {
+    if (GameConstants.isEngineUpgradeUnlocked(_state.tierAccessStates)) {
       validTypes.add('engine');
     }
 
@@ -1073,7 +1151,7 @@ class GameProvider extends ChangeNotifier {
     }
 
     // Show computer upgrades only if unlocked
-    if (GameConstants.isComputerUpgradeUnlocked(_state.credits)) {
+    if (GameConstants.isComputerUpgradeUnlocked(_state.tierAccessStates)) {
       final computerTier = _state.getComputerTier();
       _addLog('  computer: Tier $computerTier');
       _addLog(
@@ -1089,7 +1167,7 @@ class GameProvider extends ChangeNotifier {
     }
 
     // Show engine upgrades only if unlocked
-    if (GameConstants.isEngineUpgradeUnlocked(_state.credits)) {
+    if (GameConstants.isEngineUpgradeUnlocked(_state.tierAccessStates)) {
       final engineTier = _state.getEngineTier();
       _addLog('  engine: Tier $engineTier');
       _addLog('    ${GameConstants.engineUpgradeDescriptions[engineTier]!}');
@@ -1672,18 +1750,19 @@ class GameProvider extends ChangeNotifier {
   /// Check and update access level discovery based on current credit balance.
   /// 
   /// Access level discovery is permanent - once a level reaches its threshold, it's marked as discovered.
+  /// Access control uses hysteresis: drops at 60% threshold, reactivates at 80%.
   void _checkAndUpdateUnlocks() {
     final currentCredits = _state.credits;
     var updatedTierStates = Map<String, CRAccessState>.from(_state.tierAccessStates);
     bool updated = false;
     
-    // Check each tier for discovery
+    // Check each tier for discovery and access control
     for (int tierNum = 1; tierNum <= 4; tierNum++) {
       final tierKey = tierNum.toString();
       final oldState = updatedTierStates[tierKey]!;
       final threshold = CRAccessConfig.getThreshold(tierNum);
       
-      // Mark tier as discovered if threshold is reached
+      // Mark tier as discovered if threshold is reached (permanent)
       bool discovered = oldState.discovered;
       bool showAchievementMessage = false;
       
@@ -1691,15 +1770,31 @@ class GameProvider extends ChangeNotifier {
         discovered = true;
         showAchievementMessage = true;
         updated = true;
-        
-        // Update with new discovery state (access always granted when discovered)
-        updatedTierStates[tierKey] = CRAccessState(
-          discovered: true,
-          accessActive: true,
-        );
       }
       
-      // Show achievement message if newly discovered
+      // Calculate access active status using hysteresis logic
+      bool accessActive = discovered 
+          ? CRAccessConfig.calculateAccessActive(
+              currentCredits,
+              threshold,
+              oldState.accessActive,
+            )
+          : false;
+      
+      // Check if access status changed for discovered tiers
+      bool accessLost = discovered && oldState.accessActive && !accessActive;
+      bool accessRegained = discovered && !oldState.accessActive && accessActive;
+      
+      // Update state if anything changed
+      if (discovered != oldState.discovered || accessActive != oldState.accessActive) {
+        updatedTierStates[tierKey] = CRAccessState(
+          discovered: discovered,
+          accessActive: accessActive,
+        );
+        updated = true;
+      }
+      
+      // Show achievement message for new discovery
       if (showAchievementMessage) {
         _addLog('');
         _addLog('═══ ACCESS GRANTED ═══');
@@ -1740,16 +1835,39 @@ class GameProvider extends ChangeNotifier {
           _addLog('  • CLASS-C Ship (${classCSpec.baseCost} cr)');
           _addLog('    - ${classCSpec.fuelCapacity} Fuel Capacity');
           _addLog('    - ${classCSpec.cargoCapacity} Cargo Capacity');
-          _addLog('    - Includes Computer systems');
-          _addLog('    - Purchase at HELIOS REACH: "buy ship"');
+          _addLog('    - Integrated Computer systems');
+          _addLog('    - Purchase at: HELIOS REACH');
         } else if (tierNum == 4) {
           _addLog('NEW SYSTEMS:');
           _addLog('  • Startrail Expanse');
           _addLog('  • Outercrest Nexus');
           _addLog('');
-          _addLog('Full star map now available!');
+          _addLog('ACHIEVEMENT: Full star map now available!');
         }
         
+        _addLog('════════════════════════════');
+        _addLog('');
+      }
+      
+      // Show message when access is lost
+      if (accessLost) {
+        _addLog('');
+        _addLog('═══ ACCESS SUSPENDED ═══');
+        _addLog('Credits dropped below ${CRAccessConfig.getLockThreshold(tierNum)}');
+        _addLog('');
+        _addLog('System access limited.');
+        _addLog('Reach ${CRAccessConfig.getReactivateThreshold(tierNum)} cr to restore.');
+        _addLog('════════════════════════════');
+        _addLog('');
+      }
+      
+      // Show message when access is regained
+      if (accessRegained) {
+        _addLog('');
+        _addLog('═══ ACCESS RESTORED ═══');
+        _addLog('Reached ${CRAccessConfig.getReactivateThreshold(tierNum)} Credits');
+        _addLog('');
+        _addLog('System access restored.');
         _addLog('════════════════════════════');
         _addLog('');
       }
@@ -1851,7 +1969,7 @@ class GameProvider extends ChangeNotifier {
     if (parts.length < 2) {
       _addLog('Usage: trip <system>');
       final availableSystems =
-          GameConstants.getAvailableSystems(_state.credits);
+          GameConstants.getAvailableSystems(_state.tierAccessStates);
       _addLog('Available systems: ${availableSystems.join(", ")}');
       return;
     }
@@ -1861,12 +1979,12 @@ class GameProvider extends ChangeNotifier {
     if (!GameConstants.planetIds.contains(destInput)) {
       _addLog('Unknown system: $destInput');
       final availableSystems =
-          GameConstants.getAvailableSystems(_state.credits);
+          GameConstants.getAvailableSystems(_state.tierAccessStates);
       _addLog('Available systems: ${availableSystems.join(", ")}');
       return;
     }
 
-    if (!GameConstants.isSystemUnlocked(destInput, _state.credits)) {
+    if (!GameConstants.isSystemUnlocked(destInput, _state.tierAccessStates)) {
       _addLog('System $destInput is not yet unlocked.');
       return;
     }
@@ -1901,106 +2019,26 @@ class GameProvider extends ChangeNotifier {
   }
 
   void _handleShip(List<String> parts) {
-    if (parts.length < 2) {
-      // Show current ship info
+    // Show current ship info
+    _addLog('');
+    _addLog('CURRENT SHIP: ${_state.shipClass}');
+    final shipSpec = GameConstants.shipSpecs[_state.shipClass]!;
+    _addLog(shipSpec.description);
+    _addLog('Fuel Capacity: ${shipSpec.fuelCapacity}');
+    _addLog('Cargo Capacity: ${shipSpec.cargoCapacity}');
+
+    if (_state.shipClass == 'CLASS-B' &&
+        GameConstants.isClassCShipUnlocked(_state.tierAccessStates)) {
       _addLog('');
-      _addLog('CURRENT SHIP: ${_state.shipClass}');
-      final shipSpec = GameConstants.shipSpecs[_state.shipClass]!;
-      _addLog(shipSpec.description);
-      _addLog('Fuel Capacity: ${shipSpec.fuelCapacity}');
-      _addLog('Cargo Capacity: ${shipSpec.cargoCapacity}');
-
-      if (_state.shipClass == 'CLASS-B' &&
-          GameConstants.isClassCShipUnlocked(_state.credits)) {
-        _addLog('');
-        _addLog('AVAILABLE FOR PURCHASE:');
-        final classCSpec = GameConstants.shipSpecs['CLASS-C']!;
-        _addLog('CLASS-C Ship - ${classCSpec.baseCost} cr');
-        _addLog('  ${classCSpec.description}');
-        _addLog('  Fuel: ${classCSpec.fuelCapacity}');
-        _addLog('  Cargo: ${classCSpec.cargoCapacity}');
-        _addLog('  Resale value: ${classCSpec.resaleValue} cr');
-        _addLog('  Use "ship buy" at HELIOS REACH to purchase');
-      }
-      _addLog('');
-      return;
-    }
-
-    final action = parts[1].toLowerCase();
-
-    if (action == 'buy') {
-      // Purchase CLASS-C ship
-      if (!GameConstants.isClassCShipUnlocked(_state.credits)) {
-        _addLog(
-            'CLASS-C ship unlocks at ${GameConstants.unlockTier3Credits} credits.');
-        return;
-      }
-
-      if (_state.shipClass == 'CLASS-C') {
-        _addLog('You already own a CLASS-C ship.');
-        return;
-      }
-
-      if (_state.location != 'HELIOS REACH') {
-        _addLog('Ships can only be purchased at HELIOS REACH.');
-        return;
-      }
-
+      _addLog('AVAILABLE FOR PURCHASE:');
       final classCSpec = GameConstants.shipSpecs['CLASS-C']!;
-      final classBSpec = GameConstants.shipSpecs['CLASS-B']!;
-
-      // Cost is purchase price minus resale of current ship (which is 0 for CLASS-B)
-      final netCost = classCSpec.baseCost - classBSpec.resaleValue;
-
-      if (_state.credits < netCost) {
-        _addLog('Not enough credits. Need: $netCost, Have: ${_state.credits}');
-        return;
-      }
-
-      // Check if cargo would overflow
-      if (_state.cargoUsed > classCSpec.cargoCapacity) {
-        _addLog(
-            'Cannot switch ships: current cargo (${_state.cargoUsed}) exceeds CLASS-C capacity (${classCSpec.cargoCapacity}).');
-        _addLog('Sell some cargo before purchasing.');
-        return;
-      }
-
-      final newCredits = _state.credits - netCost;
-      final newFuel = _state.fuel.clamp(0, classCSpec.fuelCapacity);
-
-      // CLASS-C includes Computer T1+T2 by default
-      final newUpgrades = Map<String, ShipUpgrade>.from(_state.shipUpgrades);
-      newUpgrades['computer'] = ShipUpgrade(type: 'computer', currentTier: 2);
-
-      _updateState(
-          _state.copyWith(
-            shipClass: 'CLASS-C',
-            fuel: newFuel,
-            credits: newCredits,
-            shipUpgrades: newUpgrades,
-            totalCreditsSpentOnUpgrades:
-                _state.totalCreditsSpentOnUpgrades + netCost,
-          ),
-          notify: false);
-
-      _addLog('');
-      _addLog('═══════════════════════════');
-      _addLog('SHIP PURCHASE COMPLETE');
-      _addLog('═══════════════════════════');
-      _addLog('New ship: CLASS-C');
-      _addLog('Fuel capacity: ${classCSpec.fuelCapacity}');
-      _addLog('Cargo capacity: ${classCSpec.cargoCapacity}');
-      _addLog('Integrated systems: Advanced Computer');
-      _addLog('');
-      _addLog('Credits remaining: $newCredits');
-      _addLog('═══════════════════════════');
-      _addLog('');
-
-      _maybeShowEduPrompt(
-          'You upgraded to a CLASS-C ship! This powerful vessel gives you more capacity and includes advanced computer systems.');
-    } else {
-      _addLog('Unknown ship command: $action');
-      _addLog('Use "ship" to view info or "ship buy" to purchase.');
+      _addLog('CLASS-C Ship - ${classCSpec.baseCost} cr');
+      _addLog('  ${classCSpec.description}');
+      _addLog('  Fuel: ${classCSpec.fuelCapacity}');
+      _addLog('  Cargo: ${classCSpec.cargoCapacity}');
+      _addLog('  Resale value: ${classCSpec.resaleValue} cr');
+      _addLog('  Use "buy ship" at HELIOS REACH to purchase');
     }
+    _addLog('');
   }
 }

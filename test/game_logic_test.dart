@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:star_trails/models/game_state.dart';
 import 'package:star_trails/models/planet.dart';
+import 'package:star_trails/models/cr_access_state.dart';
 import 'package:star_trails/providers/game_provider.dart';
 import 'package:star_trails/utils/constants.dart';
 
@@ -365,6 +366,144 @@ void main() {
       expect(state.highestCreditsReached, equals(25000));
       expect(state.unlockedLevel,
           equals(GameConstants.creditLevelMilestones.length));
+    });
+  });
+
+  group('Achievement Unlock Display', () {
+    test('tier 1 achievement message defined at 5000 credits', () {
+      // Verify the tier 1 threshold is correct
+      expect(CRAccessConfig.getThreshold(1), equals(5000));
+    });
+
+    test('tier 1 systems are locked until tier 1 threshold reached', () {
+      final initialState = GameState.initial();
+      
+      // Check that Tier 1 systems are not active initially
+      expect(
+        GameConstants.isTier1SystemActive(initialState.tierAccessStates),
+        isFalse,
+        reason: 'Tier 1 systems should not be active at start',
+      );
+    });
+
+    test('tier 1 systems become active after reaching threshold', () {
+      final state = GameState.initial();
+      final updatedTierStates = Map<String, CRAccessState>.from(state.tierAccessStates);
+      updatedTierStates['1'] = const CRAccessState(discovered: true, accessActive: true);
+      
+      final newState = state.copyWith(tierAccessStates: updatedTierStates);
+      
+      expect(
+        GameConstants.isTier1SystemActive(newState.tierAccessStates),
+        isTrue,
+        reason: 'Tier 1 systems should be active after discovery',
+      );
+    });
+
+    test('tier 1 discovered status persists independently of access active', () {
+      final state = GameState.initial();
+      final updatedTierStates = Map<String, CRAccessState>.from(state.tierAccessStates);
+      
+      // Discovered but not active (due to hysteresis)
+      updatedTierStates['1'] = const CRAccessState(discovered: true, accessActive: false);
+      final newState = state.copyWith(tierAccessStates: updatedTierStates);
+      
+      // Check discovery is recorded
+      expect(
+        GameConstants.isTier1Discovered(newState.tierAccessStates),
+        isTrue,
+        reason: 'Tier 1 should be marked as discovered',
+      );
+      
+      // But systems are not active
+      expect(
+        GameConstants.isTier1SystemActive(newState.tierAccessStates),
+        isFalse,
+        reason: 'Tier 1 systems should not be active when access is suspended',
+      );
+    });
+
+    test('commodities remain unlocked even when system access is suspended', () {
+      final state = GameState.initial();
+      final updatedTierStates = Map<String, CRAccessState>.from(state.tierAccessStates);
+      
+      // Discover but don't activate tier 1 systems
+      updatedTierStates['1'] = const CRAccessState(discovered: true, accessActive: false);
+      final newState = state.copyWith(tierAccessStates: updatedTierStates);
+      
+      // Tech commodity (unlocked at tier 1) should still be available
+      expect(
+        GameConstants.isCommodityUnlocked('Tech', newState.tierAccessStates),
+        isTrue,
+        reason: 'Tech commodity should remain unlocked even when system access is suspended',
+      );
+    });
+
+    test('hysteresis prevents flickering when credits hover near threshold', () {
+      // At tier 1 threshold of 5000:
+      // - Lock threshold (60%): 3000
+      // - Reactivate threshold (80%): 4000
+      
+      final atThreshold = 5000;
+      final lockThreshold = CRAccessConfig.getLockThreshold(1);
+      final reactivateThreshold = CRAccessConfig.getReactivateThreshold(1);
+      
+      expect(lockThreshold, equals(3000), reason: '60% of 5000');
+      expect(reactivateThreshold, equals(4000), reason: '80% of 5000');
+      
+      // Once active, stays active above lock threshold
+      var isActive = CRAccessConfig.calculateAccessActive(
+        3500, // above lock threshold
+        atThreshold,
+        true, // was active
+      );
+      expect(isActive, isTrue, reason: 'Should stay active above lock threshold');
+      
+      // Falls inactive below lock threshold
+      isActive = CRAccessConfig.calculateAccessActive(
+        2999, // below lock threshold
+        atThreshold,
+        true, // was active
+      );
+      expect(isActive, isFalse, reason: 'Should become inactive below lock threshold');
+      
+      // Requires reaching reactivate threshold to become active again
+      isActive = CRAccessConfig.calculateAccessActive(
+        3500, // still below reactivate threshold
+        atThreshold,
+        false, // was inactive
+      );
+      expect(isActive, isFalse, reason: 'Should not reactivate until reaching 80% threshold');
+      
+      isActive = CRAccessConfig.calculateAccessActive(
+        4000, // at reactivate threshold
+        atThreshold,
+        false, // was inactive
+      );
+      expect(isActive, isTrue, reason: 'Should reactivate at 80% threshold');
+    });
+
+    test('access control follows hysteresis across all tiers', () {
+      // Tier 2: 10000 threshold
+      final tier2Lock = CRAccessConfig.getLockThreshold(2);
+      final tier2Reactivate = CRAccessConfig.getReactivateThreshold(2);
+      
+      expect(tier2Lock, equals(6000), reason: '60% of 10000');
+      expect(tier2Reactivate, equals(8000), reason: '80% of 10000');
+      
+      // Tier 3: 18000 threshold
+      final tier3Lock = CRAccessConfig.getLockThreshold(3);
+      final tier3Reactivate = CRAccessConfig.getReactivateThreshold(3);
+      
+      expect(tier3Lock, equals(10800), reason: '60% of 18000');
+      expect(tier3Reactivate, equals(14400), reason: '80% of 18000');
+      
+      // Tier 4: 25000 threshold
+      final tier4Lock = CRAccessConfig.getLockThreshold(4);
+      final tier4Reactivate = CRAccessConfig.getReactivateThreshold(4);
+      
+      expect(tier4Lock, equals(15000), reason: '60% of 25000');
+      expect(tier4Reactivate, equals(20000), reason: '80% of 25000');
     });
   });
 }
