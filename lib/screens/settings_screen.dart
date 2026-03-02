@@ -183,10 +183,10 @@ class SettingsScreen extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppTheme.phosphorGreenDim.withValues(alpha: 0.12),
+            color: Colors.black.withValues(alpha: 0.78),
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: AppTheme.phosphorGreen.withValues(alpha: 0.5),
+              color: AppTheme.phosphorGreen.withValues(alpha: 0.35),
               width: 1,
             ),
             boxShadow: [
@@ -198,7 +198,7 @@ class SettingsScreen extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(icon, color: AppTheme.phosphorGreenBright),
+              Icon(icon, color: Colors.amber.withValues(alpha: 0.95)),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
@@ -206,8 +206,8 @@ class SettingsScreen extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: Colors.amber.withValues(alpha: 0.95),
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
@@ -225,7 +225,7 @@ class SettingsScreen extends StatelessWidget {
               ),
               Icon(
                 Icons.arrow_forward_ios,
-                color: AppTheme.phosphorGreen.withValues(alpha: 0.7),
+                color: Colors.amber.withValues(alpha: 0.95),
                 size: 18,
               ),
             ],
@@ -246,10 +246,10 @@ class SettingsScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.phosphorGreenDim.withValues(alpha: 0.12),
+        color: Colors.black.withValues(alpha: 0.78),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: AppTheme.phosphorGreen.withValues(alpha: 0.5),
+          color: AppTheme.phosphorGreen.withValues(alpha: 0.35),
           width: 1,
         ),
         boxShadow: [
@@ -261,7 +261,7 @@ class SettingsScreen extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(icon, color: AppTheme.phosphorGreenBright),
+          Icon(icon, color: Colors.amber.withValues(alpha: 0.95)),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
@@ -269,8 +269,8 @@ class SettingsScreen extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: Colors.amber.withValues(alpha: 0.95),
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
@@ -306,10 +306,10 @@ class SettingsScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.phosphorGreenDim.withValues(alpha: 0.12),
+        color: Colors.black.withValues(alpha: 0.78),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: AppTheme.phosphorGreen.withValues(alpha: 0.5),
+          color: AppTheme.phosphorGreen.withValues(alpha: 0.35),
           width: 1,
         ),
         boxShadow: [
@@ -323,7 +323,7 @@ class SettingsScreen extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(icon, color: AppTheme.phosphorGreenBright),
+              Icon(icon, color: Colors.amber.withValues(alpha: 0.95)),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
@@ -331,8 +331,8 @@ class SettingsScreen extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: Colors.amber.withValues(alpha: 0.95),
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),

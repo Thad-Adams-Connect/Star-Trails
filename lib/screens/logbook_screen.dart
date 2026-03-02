@@ -397,7 +397,6 @@ class _SessionRecapsSection extends StatelessWidget {
       itemCount: sessions.length,
       itemBuilder: (context, index) {
         final session = sessions[index];
-        final systemEntries = systemEntriesBySession[session.id] ?? const [];
 
         return Padding(
           padding: const EdgeInsets.only(bottom: 16),
@@ -445,37 +444,6 @@ class _SessionRecapsSection extends StatelessWidget {
                   label: 'Trades Completed',
                   value: '${session.tradesCompleted}',
                 ),
-                if (systemEntries.isNotEmpty) ...[
-                  const SizedBox(height: 12),
-                  Container(
-                    height: 1,
-                    decoration: BoxDecoration(
-                      color: AppTheme.phosphorGreenDim.withValues(alpha: 0.5),
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  Text(
-                    'System Entry Highlights',
-                    style: AppTheme.terminalBody.copyWith(
-                      color: Colors.amber.withValues(alpha: 0.95),
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  for (final entry in systemEntries) ...[
-                    Text(
-                      '• ${entry.systemId}',
-                      style: AppTheme.terminalBody.copyWith(
-                        color: AppTheme.phosphorGreenBright,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(entry.historyText, style: AppTheme.terminalBody),
-                    const SizedBox(height: 10),
-                  ],
-                ],
               ],
             ),
           ),

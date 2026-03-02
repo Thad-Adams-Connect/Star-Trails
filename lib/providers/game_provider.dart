@@ -245,6 +245,9 @@ class GameProvider extends ChangeNotifier {
 
     _updateState(_state.resetSessionStats());
     _sessionIsGameOver = false;
+    
+    // Display help output on session continue
+    _displayHelpOnSessionContinue();
   }
 
   /// Update captain and ship names in both GameState and Dashboard.
@@ -396,6 +399,59 @@ class GameProvider extends ChangeNotifier {
   }
 
   void _handleHelp() {
+    _addLog('');
+    _addLog('COMMANDS:');
+    _addLog('  help - show this help');
+    _addLog('  status - show your status');
+    _addLog('  market - show market prices at current location');
+    _addLog('  cargo - show your cargo');
+    _addLog('  buy <item> <qty> - buy items (must be docked)');
+    _addLog('  sell <item> <qty> - sell items (must be docked)');
+    _addLog('  refuel <qty> - buy fuel (must be docked)');
+
+    // Build dynamic upgrade types list based on unlocks
+    final upgradeTypes = <String>['fuel', 'cargo'];
+    if (GameConstants.isComputerUpgradeUnlocked(_state.credits)) {
+      upgradeTypes.add('computer');
+    }
+    if (GameConstants.isEngineUpgradeUnlocked(_state.credits)) {
+      upgradeTypes.add('engine');
+    }
+    _addLog(
+        '  upgrade <type> <tier> - upgrade ship (${upgradeTypes.join(", ")})');
+    _addLog('  travel <system> - travel to system');
+
+    final computerTier = _state.getComputerTier();
+    if (computerTier >= 1) {
+      _addLog('  trip <system> - show fuel required to destination');
+    }
+    if (computerTier >= 2) {
+      _addLog('  market <system> - show market at remote system');
+    }
+
+    if (GameConstants.isClassCShipUnlocked(_state.credits) &&
+        _state.shipClass == 'CLASS-B') {
+      _addLog('  ship buy - purchase CLASS-C ship (at HELIOS REACH)');
+    }
+
+    _addLog('  end - end current run');
+    _addLog('');
+
+    // Show only unlocked systems and commodities
+    final availableSystems = GameConstants.getAvailableSystems(_state.credits);
+    final availableCommodities =
+        GameConstants.getAvailableCommodities(_state.credits);
+
+    _addLog('SYSTEMS: ${availableSystems.join(", ")}');
+    _addLog('ITEMS: ${availableCommodities.join(", ")}');
+    _addLog('');
+  }
+
+  /// Display help output when continuing to a new session after a run ends.
+  void _displayHelpOnSessionContinue() {
+    _addLog('');
+    _addLog('Welcome back, Captain ${_state.captainName.toUpperCase()}!');
+    _addLog('Ready for your next mission?');
     _addLog('');
     _addLog('COMMANDS:');
     _addLog('  help - show this help');
