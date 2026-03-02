@@ -9,7 +9,6 @@ import '../data/intro_story.dart';
 import '../data/system_histories.dart';
 import '../models/teacher_dashboard.dart';
 import '../providers/game_provider.dart';
-import '../utils/constants.dart';
 import '../utils/grid_overlay_painter.dart';
 import '../utils/hud_panel_border.dart';
 import '../utils/reflection_grouping.dart';
@@ -25,25 +24,6 @@ class LogbookScreen extends StatefulWidget {
 }
 
 class _LogbookScreenState extends State<LogbookScreen> {
-  final TextEditingController _startCreditsController = TextEditingController();
-  final TextEditingController _endCreditsController = TextEditingController();
-  final TextEditingController _buyPriceController = TextEditingController();
-  final TextEditingController _sellPriceController = TextEditingController();
-  final TextEditingController _quantityController = TextEditingController();
-
-  String? _fromSystem;
-  String? _toSystem;
-
-  @override
-  void dispose() {
-    _startCreditsController.dispose();
-    _endCreditsController.dispose();
-    _buyPriceController.dispose();
-    _sellPriceController.dispose();
-    _quantityController.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<GameProvider>();
@@ -141,18 +121,6 @@ class _LogbookScreenState extends State<LogbookScreen> {
       wisdomEntries: dashboardData.wisdomEntries,
     );
 
-    final availableSystems = GameConstants.getAvailableSystems(
-      provider.state.credits,
-    );
-
-    final selectedFrom = availableSystems.contains(_fromSystem)
-        ? _fromSystem
-        : (availableSystems.contains(provider.state.location)
-            ? provider.state.location
-            : null);
-
-    final selectedTo = availableSystems.contains(_toSystem) ? _toSystem : null;
-
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
@@ -243,37 +211,7 @@ class _LogbookScreenState extends State<LogbookScreen> {
                                         _WordsOfWisdomSection(
                                           wisdomEntries: allWisdom,
                                         ),
-                                        _CalculatorsSection(
-                                          startCreditsController:
-                                              _startCreditsController,
-                                          endCreditsController:
-                                              _endCreditsController,
-                                          buyPriceController:
-                                              _buyPriceController,
-                                          sellPriceController:
-                                              _sellPriceController,
-                                          quantityController:
-                                              _quantityController,
-                                          availableSystems: availableSystems,
-                                          selectedFrom: selectedFrom,
-                                          selectedTo: selectedTo,
-                                          currentFuel: provider.state.fuel,
-                                          currentLocation:
-                                              provider.state.location,
-                                          engineTier:
-                                              provider.state.getEngineTier(),
-                                          onFromChanged: (value) {
-                                            setState(() {
-                                              _fromSystem = value;
-                                            });
-                                          },
-                                          onToChanged: (value) {
-                                            setState(() {
-                                              _toSystem = value;
-                                            });
-                                          },
-                                          onRecalculate: () => setState(() {}),
-                                        ),
+                                        const _CalculatorsSection(),
                                       ],
                                     ),
                                   ),
@@ -680,128 +618,96 @@ class _WordsOfWisdomSection extends StatelessWidget {
   }
 }
 
-class _CalculatorsSection extends StatelessWidget {
-  final TextEditingController startCreditsController;
-  final TextEditingController endCreditsController;
-  final TextEditingController buyPriceController;
-  final TextEditingController sellPriceController;
-  final TextEditingController quantityController;
-  final List<String> availableSystems;
-  final String? selectedFrom;
-  final String? selectedTo;
-  final int currentFuel;
-  final String currentLocation;
-  final int engineTier;
-  final ValueChanged<String?> onFromChanged;
-  final ValueChanged<String?> onToChanged;
-  final VoidCallback onRecalculate;
+class _CalculatorsSection extends StatefulWidget {
+  const _CalculatorsSection();
 
-  const _CalculatorsSection({
-    required this.startCreditsController,
-    required this.endCreditsController,
-    required this.buyPriceController,
-    required this.sellPriceController,
-    required this.quantityController,
-    required this.availableSystems,
-    required this.selectedFrom,
-    required this.selectedTo,
-    required this.currentFuel,
-    required this.currentLocation,
-    required this.engineTier,
-    required this.onFromChanged,
-    required this.onToChanged,
-    required this.onRecalculate,
-  });
+  @override
+  State<_CalculatorsSection> createState() => _CalculatorsSectionState();
+}
+
+class _CalculatorsSectionState extends State<_CalculatorsSection> {
+  final TextEditingController _buyPriceController = TextEditingController();
+  final TextEditingController _sellPriceController = TextEditingController();
+  final TextEditingController _quantityController = TextEditingController();
+
+  @override
+  void dispose() {
+    _buyPriceController.dispose();
+    _sellPriceController.dispose();
+    _quantityController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final startCredits = int.tryParse(startCreditsController.text.trim());
-    final endCredits = int.tryParse(endCreditsController.text.trim());
-    final net =
-        (startCredits != null && endCredits != null) ? endCredits - startCredits : null;
-
-    final buyPrice = int.tryParse(buyPriceController.text.trim());
-    final sellPrice = int.tryParse(sellPriceController.text.trim());
-    final quantity = int.tryParse(quantityController.text.trim());
+    final buyPrice = int.tryParse(_buyPriceController.text.trim());
+    final sellPrice = int.tryParse(_sellPriceController.text.trim());
+    final quantity = int.tryParse(_quantityController.text.trim());
     final tradeProfit = (buyPrice != null && sellPrice != null && quantity != null)
         ? (sellPrice - buyPrice) * quantity
-        : null;
-
-    final canCalculateFuel = selectedFrom != null && selectedTo != null;
-    final fuelCost = canCalculateFuel
-        ? GameConstants.calculateFuelCost(
-            selectedFrom!,
-            selectedTo!,
-            engineTier,
-          )
         : null;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       children: [
         _NotebookSectionCard(
-          title: 'Profit / Loss Calculator',
+          title: 'Trading Calculator',
+          subtitle: 'Formula Reference',
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: _CalcField(
-                      label: 'Starting Credits',
-                      controller: startCreditsController,
-                      onChanged: (_) => onRecalculate(),
-                    ),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.45),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: AppTheme.phosphorGreen.withValues(alpha: 0.5),
+                    width: 1,
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _CalcField(
-                      label: 'Ending Credits',
-                      controller: endCreditsController,
-                      onChanged: (_) => onRecalculate(),
-                    ),
+                ),
+                child: Text(
+                  'Trade Profit = (Sell Price - Buy Price) × Quantity',
+                  style: AppTheme.terminalBody.copyWith(
+                    color: AppTheme.phosphorGreenBright,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
                   ),
-                ],
+                ),
               ),
-              const SizedBox(height: 12),
-              _MetricRow(
-                label: 'Net Result',
-                value: net == null ? 'N/A' : '$net',
-                highlight: net != null,
-                positive: (net ?? 0) >= 0,
+              const SizedBox(height: 10),
+              Text(
+                'Use this to estimate credits gained per trade run.',
+                style: AppTheme.terminalBody.copyWith(
+                  color: Colors.white70,
+                  fontSize: 12,
+                ),
               ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        _NotebookSectionCard(
-          title: 'Trade Profit Calculator',
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+              const SizedBox(height: 14),
               Row(
                 children: [
                   Expanded(
                     child: _CalcField(
                       label: 'Buy Price',
-                      controller: buyPriceController,
-                      onChanged: (_) => onRecalculate(),
+                      controller: _buyPriceController,
+                      onChanged: (_) => setState(() {}),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: _CalcField(
                       label: 'Sell Price',
-                      controller: sellPriceController,
-                      onChanged: (_) => onRecalculate(),
+                      controller: _sellPriceController,
+                      onChanged: (_) => setState(() {}),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: _CalcField(
                       label: 'Quantity',
-                      controller: quantityController,
-                      onChanged: (_) => onRecalculate(),
+                      controller: _quantityController,
+                      onChanged: (_) => setState(() {}),
                     ),
                   ),
                 ],
@@ -813,67 +719,6 @@ class _CalculatorsSection extends StatelessWidget {
                 highlight: tradeProfit != null,
                 positive: (tradeProfit ?? 0) >= 0,
               ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        _NotebookSectionCard(
-          title: 'Fuel Cost Tool',
-          subtitle: 'Current location: $currentLocation',
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: _SystemDropdown(
-                      label: 'From',
-                      systems: availableSystems,
-                      value: selectedFrom,
-                      onChanged: onFromChanged,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _SystemDropdown(
-                      label: 'To',
-                      systems: availableSystems,
-                      value: selectedTo,
-                      onChanged: onToChanged,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              _MetricRow(
-                label: 'Fuel Required',
-                value: fuelCost == null ? 'N/A' : '$fuelCost',
-              ),
-              _MetricRow(
-                label: 'Current Fuel',
-                value: '$currentFuel',
-              ),
-              _MetricRow(
-                label: 'Status',
-                value: fuelCost == null
-                    ? 'Select systems'
-                    : (currentFuel >= fuelCost
-                        ? 'SUFFICIENT FUEL'
-                        : 'INSUFFICIENT FUEL'),
-                highlight: fuelCost != null,
-                positive: fuelCost == null ? true : currentFuel >= fuelCost,
-              ),
-              if (fuelCost != null && engineTier > 0)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Text(
-                    'Engine tier $engineTier reduces route fuel cost (minimum ${GameConstants.minFuelPerTrip}).',
-                    style: AppTheme.terminalBody.copyWith(
-                      color: Colors.white70,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
             ],
           ),
         ),
@@ -1070,79 +915,6 @@ class _CalcField extends StatelessWidget {
               ),
             ),
           ),
-        ),
-      ],
-    );
-  }
-}
-
-class _SystemDropdown extends StatelessWidget {
-  final String label;
-  final List<String> systems;
-  final String? value;
-  final ValueChanged<String?> onChanged;
-
-  const _SystemDropdown({
-    required this.label,
-    required this.systems,
-    required this.value,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: AppTheme.terminalBody.copyWith(
-            color: AppTheme.phosphorGreenBright,
-            fontWeight: FontWeight.bold,
-            fontSize: 13,
-          ),
-        ),
-        const SizedBox(height: 6),
-        DropdownButtonFormField<String>(
-          initialValue: value,
-          isExpanded: true,
-          dropdownColor: Colors.black.withValues(alpha: 0.95),
-          style: AppTheme.terminalBody,
-          decoration: InputDecoration(
-            isDense: true,
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-            filled: true,
-            fillColor: Colors.black.withValues(alpha: 0.45),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
-              borderSide: BorderSide(
-                color: AppTheme.phosphorGreen.withValues(alpha: 0.6),
-              ),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
-              borderSide: BorderSide(
-                color: AppTheme.phosphorGreen.withValues(alpha: 0.8),
-              ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
-              borderSide: const BorderSide(
-                color: AppTheme.phosphorGreenBright,
-                width: 2,
-              ),
-            ),
-          ),
-          items: systems
-              .map(
-                (system) => DropdownMenuItem<String>(
-                  value: system,
-                  child: Text(system),
-                ),
-              )
-              .toList(),
-          onChanged: onChanged,
         ),
       ],
     );
