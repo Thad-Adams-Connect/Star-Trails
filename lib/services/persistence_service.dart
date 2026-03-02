@@ -93,8 +93,7 @@ class PersistenceService {
 
   Future<void> setNarrativeTextSpeedMultiplier(double multiplier) async {
     final prefs = await SharedPreferences.getInstance();
-    final normalized = multiplier.clamp(0.5, 2.0).toDouble();
-    await prefs.setDouble(_narrativeTextSpeedKey, normalized);
+    await prefs.setDouble(_narrativeTextSpeedKey, multiplier);
   }
 
   Future<double> getNarrativeTextSpeedMultiplier() async {
@@ -103,6 +102,6 @@ class PersistenceService {
     if (saved == null) {
       return 1.0;
     }
-    return saved.clamp(0.5, 2.0).toDouble();
+    return saved;
   }
 }

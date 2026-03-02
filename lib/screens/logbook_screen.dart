@@ -14,6 +14,7 @@ import '../utils/hud_panel_border.dart';
 import '../utils/reflection_grouping.dart';
 import '../utils/starfield_painter.dart';
 import '../utils/theme.dart';
+import '../utils/pixel_route.dart';
 import '../widgets/end_run_summary.dart';
 
 class LogbookScreen extends StatefulWidget {
@@ -258,9 +259,7 @@ class _LogbookScreenState extends State<LogbookScreen> {
     final navigator = Navigator.of(context);
     final provider = context.read<GameProvider>();
     final result = await navigator.push<String>(
-      MaterialPageRoute(
-        builder: (context) => _EditReflectionScreen(reflection: reflection),
-      ),
+      pixelRoute(_EditReflectionScreen(reflection: reflection)),
     );
 
     if (!mounted) return;
