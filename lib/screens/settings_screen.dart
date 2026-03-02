@@ -368,7 +368,7 @@ class SettingsScreen extends StatelessWidget {
                   ],
                 ),
                 child: Text(
-                  '${value.toStringAsFixed(2)}x',
+                  '${value.toStringAsFixed(1)}x',
                   style: const TextStyle(
                     color: AppTheme.phosphorGreenBright,
                     fontSize: 14,
@@ -391,9 +391,9 @@ class SettingsScreen extends StatelessWidget {
             ),
             child: Slider(
               value: value,
-              min: 0.5,
-              max: 2.0,
-              divisions: 6,
+              min: 0.10,
+              max: 10.0,
+              divisions: 99,
               onChanged: onChanged,
             ),
           ),

@@ -22,9 +22,9 @@ class GameProvider extends ChangeNotifier {
   static const Duration _introLineDelay = Duration(milliseconds: 750);
   static const Duration _introSectionDelay = Duration(milliseconds: 750);
   static const Duration _introHeadingDelay = Duration(milliseconds: 1200);
-  static const double _narrativeSpeedMin = 0.5;
-  static const double _narrativeSpeedMax = 2.0;
-  static const double _narrativeSpeedStep = 0.25;
+  static const double _narrativeSpeedMin = 0.10;
+  static const double _narrativeSpeedMax = 10.0;
+  static const double _narrativeSpeedStep = 0.10;
   static const double _defaultNarrativeSpeed = 1.0;
   static const Set<String> _introMajorHeadings = <String>{
     'Your Ship',
