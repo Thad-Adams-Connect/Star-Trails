@@ -10,6 +10,7 @@ import '../utils/theme.dart';
 import '../utils/hud_panel_border.dart';
 import '../utils/starfield_painter.dart';
 import '../utils/grid_overlay_painter.dart';
+import '../utils/app_version.dart';
 import 'game_screen.dart';
 import 'settings_screen.dart';
 import 'teacher_mode_screen.dart';
@@ -106,7 +107,7 @@ class _MenuScreenState extends State<MenuScreen> {
                                   ),
                                   const SizedBox(height: 8),
                                   Text(
-                                    'v1.0.0',
+                                    AppVersion.editionCode,
                                     style: AppTheme.terminalSubtitle,
                                     textAlign: TextAlign.center,
                                   ),

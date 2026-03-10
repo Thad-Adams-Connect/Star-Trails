@@ -1,0 +1,36 @@
+{
+  "edition": "PUB",
+  "display_name": "Star Trails - Public Edition",
+  "version_prefix": "PUB",
+  "content_path": "content/public",
+  "features": [
+    "terminal",
+    "logbook",
+    "wisdom_system",
+    "trading",
+    "exploration",
+    "ship_upgrades",
+    "reputation",
+    "cr_access"
+  ],
+  "difficulty": {
+    "starting_credits": 1000,
+    "fuel_cost_multiplier": 1.0,
+    "price_volatility": 1.0,
+    "enable_route_exploitation_limits": true
+  },
+  "branding": {
+    "app_name": "Star Trails",
+    "short_name": "StarTrails-PUB",
+    "bundle_id": "com.ubertaslab.startrails.pub",
+    "theme_color": "#1a237e"
+  },
+  "build_targets": [
+    "android",
+    "ios",
+    "windows",
+    "macos",
+    "linux",
+    "web"
+  ]
+}

@@ -1,0 +1,16 @@
+# Git hook files should not be analyzed as code
+.git/hooks/* linguist-generated=true
+.git/hooks/* linguist-documentation
+
+# Prevent language detection issues
+.git/hooks/pre-commit linguist-language=Shell
+.git/hooks/*.ps1 linguist-language=PowerShell
+
+# Core version management files
+core/version_manager/*.py linguist-language=Python
+scripts/*.py linguist-language=Python
+build/*.py linguist-language=Python
+tests/*.py linguist-language=Python
+
+# Config files
+*.json linguist-language=JSON

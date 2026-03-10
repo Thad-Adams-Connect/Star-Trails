@@ -10,6 +10,7 @@ import '../utils/theme.dart';
 import '../utils/hud_panel_border.dart';
 import '../utils/starfield_painter.dart';
 import '../utils/grid_overlay_painter.dart';
+import '../utils/app_version.dart';
 import 'player_identity_screen.dart';
 import '../utils/pixel_route.dart';
 
@@ -139,6 +140,8 @@ class SettingsScreen extends StatelessWidget {
                                           .setNarrativeTextSpeedMultiplier(
                                               value),
                                     ),
+                                    const SizedBox(height: 28),
+                                    _buildVersionInfo(context),
                                   ],
                                 ),
                               ],
@@ -395,6 +398,69 @@ class SettingsScreen extends StatelessWidget {
               max: 10.0,
               divisions: 99,
               onChanged: onChanged,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVersionInfo(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: AppTheme.phosphorGreen.withValues(alpha: 0.25),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.info_outline,
+                color: AppTheme.phosphorGreenBright,
+                size: 20,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Version Information',
+                style: TextStyle(
+                  color: AppTheme.phosphorGreenBright,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            AppVersion.editionName,
+            style: TextStyle(
+              color: Colors.amber.withValues(alpha: 0.9),
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Version ${AppVersion.baseVersion} (Build ${AppVersion.buildNumber})',
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Full Version: ${AppVersion.fullVersion}',
+            style: TextStyle(
+              color: AppTheme.phosphorGreenDim,
+              fontSize: 11,
+              fontFamily: 'monospace',
             ),
           ),
         ],

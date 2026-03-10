@@ -1,7 +1,10 @@
 name: star_trails
 description: Star Trails - Educational space trading adventure for elementary students
 publish_to: 'none'
-version: 1.0.0+1
+# Version is managed by the edition/versioning system in core/version_manager/
+# See VERSIONING_SYSTEM_SPECIFICATION.md for details
+# Default version for development builds
+version: 1.0.1+1
 
 environment:
   sdk: '>=3.0.0 <4.0.0'

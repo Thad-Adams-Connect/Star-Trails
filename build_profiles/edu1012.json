@@ -1,0 +1,47 @@
+{
+  "edition": "EDU1012",
+  "display_name": "Star Trails - Education Edition (Grades 10-12)",
+  "version_prefix": "EDU1012",
+  "content_path": "content/edu1012",
+  "features": [
+    "terminal",
+    "logbook",
+    "wisdom_system",
+    "trading",
+    "exploration",
+    "ship_upgrades",
+    "reputation",
+    "cr_access",
+    "orbital_calculations",
+    "guided_missions",
+    "physics_helpers",
+    "economics_analysis",
+    "advanced_statistics"
+  ],
+  "difficulty": {
+    "starting_credits": 1000,
+    "fuel_cost_multiplier": 1.0,
+    "price_volatility": 1.0,
+    "enable_route_exploitation_limits": true
+  },
+  "educational": {
+    "grade_level": "10-12",
+    "subjects": ["advanced_math", "physics", "economics", "statistics", "systems_thinking"],
+    "guided_mode": false,
+    "hints_enabled": false
+  },
+  "branding": {
+    "app_name": "Star Trails Education",
+    "short_name": "StarTrails-EDU1012",
+    "bundle_id": "com.ubertaslab.startrails.edu1012",
+    "theme_color": "#d32f2f"
+  },
+  "build_targets": [
+    "android",
+    "ios",
+    "windows",
+    "macos",
+    "linux",
+    "web"
+  ]
+}

@@ -1,0 +1,94 @@
+{
+  "format_version": 1,
+  "last_updated": "2026-03-09",
+  "editions": {
+    "PUB": {
+      "content_path": "content/public",
+      "missions": {
+        "total": 0,
+        "categories": []
+      },
+      "wisdom": {
+        "total": 25,
+        "path": "lib/data/wisdom_entries.dart"
+      },
+      "history": {
+        "total": 12,
+        "path": "lib/data/system_histories.dart"
+      },
+      "calculators": {
+        "total": 0,
+        "available": []
+      },
+      "intro_story": {
+        "path": "lib/data/intro_story.dart"
+      }
+    },
+    "EDU46": {
+      "content_path": "content/edu46",
+      "missions": {
+        "total": 0,
+        "categories": ["basic_trading", "exploration", "math_fundamentals"]
+      },
+      "wisdom": {
+        "total": 0,
+        "path": "content/edu46/wisdom/"
+      },
+      "history": {
+        "total": 0,
+        "path": "content/edu46/history/"
+      },
+      "calculators": {
+        "total": 3,
+        "available": ["distance", "profit", "time"]
+      },
+      "intro_story": {
+        "path": "content/edu46/intro_story.txt"
+      }
+    },
+    "EDU79": {
+      "content_path": "content/edu79",
+      "missions": {
+        "total": 0,
+        "categories": ["intermediate_trading", "strategic_planning", "science_applications"]
+      },
+      "wisdom": {
+        "total": 0,
+        "path": "content/edu79/wisdom/"
+      },
+      "history": {
+        "total": 0,
+        "path": "content/edu79/history/"
+      },
+      "calculators": {
+        "total": 5,
+        "available": ["distance", "profit", "time", "velocity", "compound_interest"]
+      },
+      "intro_story": {
+        "path": "content/edu79/intro_story.txt"
+      }
+    },
+    "EDU1012": {
+      "content_path": "content/edu1012",
+      "missions": {
+        "total": 0,
+        "categories": ["advanced_trading", "economic_modeling", "physics_problems"]
+      },
+      "wisdom": {
+        "total": 0,
+        "path": "content/edu1012/wisdom/"
+      },
+      "history": {
+        "total": 0,
+        "path": "content/edu1012/history/"
+      },
+      "calculators": {
+        "total": 8,
+        "available": ["distance", "profit", "time", "velocity", "orbital_mechanics", "supply_demand", "statistics", "optimization"]
+      },
+      "intro_story": {
+        "path": "content/edu1012/intro_story.txt"
+      }
+    }
+  }
+}

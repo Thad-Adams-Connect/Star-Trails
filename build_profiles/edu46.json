@@ -1,0 +1,45 @@
+{
+  "edition": "EDU46",
+  "display_name": "Star Trails - Education Edition (Grades 4-6)",
+  "version_prefix": "EDU46",
+  "content_path": "content/edu46",
+  "features": [
+    "terminal",
+    "logbook",
+    "wisdom_system",
+    "trading",
+    "exploration",
+    "ship_upgrades",
+    "reputation",
+    "cr_access",
+    "basic_calculators",
+    "guided_missions",
+    "math_helpers"
+  ],
+  "difficulty": {
+    "starting_credits": 1500,
+    "fuel_cost_multiplier": 0.8,
+    "price_volatility": 0.7,
+    "enable_route_exploitation_limits": false
+  },
+  "educational": {
+    "grade_level": "4-6",
+    "subjects": ["basic_math", "reading_comprehension", "decision_making"],
+    "guided_mode": true,
+    "hints_enabled": true
+  },
+  "branding": {
+    "app_name": "Star Trails Education",
+    "short_name": "StarTrails-EDU46",
+    "bundle_id": "com.ubertaslab.startrails.edu46",
+    "theme_color": "#388e3c"
+  },
+  "build_targets": [
+    "android",
+    "ios",
+    "windows",
+    "macos",
+    "linux",
+    "web"
+  ]
+}

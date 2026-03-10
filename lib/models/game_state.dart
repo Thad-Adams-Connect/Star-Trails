@@ -70,6 +70,11 @@ class GameState {
   final String shipName;
   final String currentSessionId;
 
+  // Edition and version metadata (for save file compatibility)
+  final String edition; // Edition: PUB, EDU46, EDU79, EDU1012
+  final String gameVersion; // Full version string: PUB-1.0.3+195269663
+  final int saveFormatVersion; // Save format version (currently 1)
+
   GameState({
     required this.location,
     required this.fuel,
@@ -86,6 +91,9 @@ class GameState {
     this.captainName = '',
     this.shipName = '',
     this.currentSessionId = '',
+    this.edition = 'PUB',
+    this.gameVersion = 'PUB-1.0.0',
+    this.saveFormatVersion = 1,
     this.totalFuelUsed = 0,
     this.totalCreditsSpentOnFuel = 0,
     this.totalCreditsSpentOnGoods = 0,
@@ -243,6 +251,9 @@ class GameState {
     String? captainName,
     String? shipName,
     String? currentSessionId,
+    String? edition,
+    String? gameVersion,
+    int? saveFormatVersion,
     int? totalFuelUsed,
     int? totalCreditsSpentOnFuel,
     int? totalCreditsSpentOnGoods,
@@ -287,6 +298,9 @@ class GameState {
       captainName: captainName ?? this.captainName,
       shipName: shipName ?? this.shipName,
       currentSessionId: currentSessionId ?? this.currentSessionId,
+      edition: edition ?? this.edition,
+      gameVersion: gameVersion ?? this.gameVersion,
+      saveFormatVersion: saveFormatVersion ?? this.saveFormatVersion,
       totalFuelUsed: totalFuelUsed ?? this.totalFuelUsed,
       totalCreditsSpentOnFuel:
           totalCreditsSpentOnFuel ?? this.totalCreditsSpentOnFuel,
@@ -334,6 +348,9 @@ class GameState {
       'captainName': captainName,
       'shipName': shipName,
       'currentSessionId': currentSessionId,
+      'edition': edition,
+      'gameVersion': gameVersion,
+      'saveFormatVersion': saveFormatVersion,
       'totalFuelUsed': totalFuelUsed,
       'totalCreditsSpentOnFuel': totalCreditsSpentOnFuel,
       'totalCreditsSpentOnGoods': totalCreditsSpentOnGoods,
@@ -446,6 +463,9 @@ class GameState {
       captainName: json['captainName'] as String? ?? '',
       shipName: json['shipName'] as String? ?? '',
       currentSessionId: json['currentSessionId'] as String? ?? '',
+      edition: json['edition'] as String? ?? 'PUB',
+      gameVersion: json['gameVersion'] as String? ?? 'PUB-1.0.0',
+      saveFormatVersion: json['saveFormatVersion'] as int? ?? 1,
       totalFuelUsed: json['totalFuelUsed'] as int? ?? 0,
       totalCreditsSpentOnFuel: json['totalCreditsSpentOnFuel'] as int? ?? 0,
       totalCreditsSpentOnGoods: json['totalCreditsSpentOnGoods'] as int? ?? 0,
@@ -490,6 +510,9 @@ class GameState {
       captainName: captainName,
       shipName: shipName,
       currentSessionId: '',
+      edition: edition,
+      gameVersion: gameVersion,
+      saveFormatVersion: saveFormatVersion,
       totalFuelUsed: 0,
       totalCreditsSpentOnFuel: 0,
       totalCreditsSpentOnGoods: 0,

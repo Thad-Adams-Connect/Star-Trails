@@ -1,0 +1,46 @@
+{
+  "edition": "EDU79",
+  "display_name": "Star Trails - Education Edition (Grades 7-9)",
+  "version_prefix": "EDU79",
+  "content_path": "content/edu79",
+  "features": [
+    "terminal",
+    "logbook",
+    "wisdom_system",
+    "trading",
+    "exploration",
+    "ship_upgrades",
+    "reputation",
+    "cr_access",
+    "advanced_calculators",
+    "guided_missions",
+    "science_helpers",
+    "data_analysis"
+  ],
+  "difficulty": {
+    "starting_credits": 1200,
+    "fuel_cost_multiplier": 0.9,
+    "price_volatility": 0.85,
+    "enable_route_exploitation_limits": true
+  },
+  "educational": {
+    "grade_level": "7-9",
+    "subjects": ["algebra", "geometry", "basic_physics", "economics", "critical_thinking"],
+    "guided_mode": true,
+    "hints_enabled": true
+  },
+  "branding": {
+    "app_name": "Star Trails Education",
+    "short_name": "StarTrails-EDU79",
+    "bundle_id": "com.ubertaslab.startrails.edu79",
+    "theme_color": "#0277bd"
+  },
+  "build_targets": [
+    "android",
+    "ios",
+    "windows",
+    "macos",
+    "linux",
+    "web"
+  ]
+}

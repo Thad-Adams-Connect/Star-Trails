@@ -1,0 +1,54 @@
+{
+  "PUB": [
+    "terminal",
+    "logbook",
+    "wisdom_system",
+    "trading",
+    "exploration",
+    "ship_upgrades",
+    "reputation",
+    "cr_access"
+  ],
+  "EDU46": [
+    "terminal",
+    "logbook",
+    "wisdom_system",
+    "trading",
+    "exploration",
+    "ship_upgrades",
+    "reputation",
+    "cr_access",
+    "basic_calculators",
+    "guided_missions",
+    "math_helpers"
+  ],
+  "EDU79": [
+    "terminal",
+    "logbook",
+    "wisdom_system",
+    "trading",
+    "exploration",
+    "ship_upgrades",
+    "reputation",
+    "cr_access",
+    "advanced_calculators",
+    "guided_missions",
+    "science_helpers",
+    "data_analysis"
+  ],
+  "EDU1012": [
+    "terminal",
+    "logbook",
+    "wisdom_system",
+    "trading",
+    "exploration",
+    "ship_upgrades",
+    "reputation",
+    "cr_access",
+    "orbital_calculations",
+    "guided_missions",
+    "physics_helpers",
+    "economics_analysis",
+    "advanced_statistics"
+  ]
+}

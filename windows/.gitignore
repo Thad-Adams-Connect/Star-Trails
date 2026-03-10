@@ -6,6 +6,9 @@ flutter/ephemeral/
 *.userosscache
 *.sln.docstates
 
+# Temp resource compiler files
+RC*
+
 # Visual Studio build-related files.
 x64/
 x86/

@@ -46,3 +46,24 @@ Use the matching `flutter build <platform> --release` command for your target.
 - `lib/utils/`: shared constants, theme, painters, routing, and helpers.
 
 The app is designed to run fully offline using local storage only.
+
+## Cross-platform edition versioning
+
+This repository includes an edition-aware versioning module for consistent release metadata across Android, iOS, Windows, macOS, Linux, and Web.
+
+- Core module: `core/version_manager/`
+- Build generators: `build/build_version_generator.py`, `build/edition_build_generator.py`
+- Config files: `config/editions.json`, `config/version_config.json`, `config/version_history.json`, `config/features.json`
+- Technical reference: `VERSIONING_SYSTEM_SPECIFICATION.md`
+
+Quick version bump:
+
+```bash
+python scripts/bump_version.py patch
+```
+
+Run versioning tests:
+
+```bash
+python -m unittest tests/version_tests.py
+```

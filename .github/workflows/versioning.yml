@@ -1,0 +1,33 @@
+name: Versioning CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  validate-versioning:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        edition: [PUB, EDU46, EDU79, EDU1012]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run versioning unit tests
+        run: python -m unittest tests/version_tests.py
+
+      - name: Generate version payload
+        run: |
+          python build/build_version_generator.py \
+            --edition "${{ matrix.edition }}" \
+            --build-number "${{ github.run_number }}" \
+            --output-format dotenv
