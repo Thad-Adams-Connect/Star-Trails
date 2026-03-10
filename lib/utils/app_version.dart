@@ -1,9 +1,19 @@
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
+
 // Star Trails
 // Copyright (c) 2026 Ubertas Lab, LLC.
 // All Rights Reserved.
 
 class AppVersion {
   const AppVersion._();
+
+  // Cached version config loaded from assets at runtime
+  static Map<String, String> _cachedVersions = {};
+
+  // Development fallback version from pubspec.yaml
+  static const String _developmentVersion = '1.0.1+1';
 
   static const String _rawEdition = String.fromEnvironment('APP_EDITION');
   static const String _rawFullVersion = String.fromEnvironment('FULL_VERSION');
@@ -17,6 +27,36 @@ class AppVersion {
 
   static final Match? _fullVersionMatch =
       _fullVersionPattern.firstMatch(_rawFullVersion.trim());
+
+  /// Load config from assets. Called automatically on first access, but can be
+  /// called manually to refresh version data (e.g., when SettingsScreen opens).
+  static Future<void> _loadConfig({String? configPath}) async {
+    try {
+      final assetPath = configPath ?? 'config/version_config.json';
+      final configJson = await rootBundle.loadString(assetPath);
+      final config = jsonDecode(configJson) as Map<String, dynamic>;
+      final versions = config['versions'] as Map<String, dynamic>?;
+
+      if (versions != null) {
+        _cachedVersions = versions.cast<String, String>();
+      }
+    } catch (e) {
+      // Silently fail and use fallbacks
+      debugPrint('AppVersion: Could not load version config: $e');
+    }
+  }
+
+  /// Refresh version data from config file. Call this before displaying
+  /// version info (e.g., in SettingsScreen.initState) to ensure current version.
+  static Future<void> refresh({String? configPath}) async {
+    await _loadConfig(configPath: configPath);
+  }
+
+  /// Initialize AppVersion by loading config from assets.
+  /// Call this from main() before running the app.
+  static Future<void> initialize({String? configPath}) async {
+    await _loadConfig(configPath: configPath);
+  }
 
   static String get editionCode {
     if (_rawEdition.isNotEmpty) {
@@ -56,7 +96,16 @@ class AppVersion {
       return _rawBuildName;
     }
 
-    return '0.0.0';
+    // Check if we have a cached version from config
+    if (_cachedVersions.isNotEmpty) {
+      final cachedVersion = _cachedVersions[editionCode];
+      if (cachedVersion != null) {
+        return cachedVersion;
+      }
+    }
+
+    // Development fallback: extract version from pubspec.yaml format
+    return _developmentVersion.split('+').first;
   }
 
   static String get buildNumber {
@@ -69,7 +118,10 @@ class AppVersion {
       return _rawBuildNumber;
     }
 
-    return '0';
+    // Development fallback: extract build number from pubspec.yaml format
+    return _developmentVersion.split('+').length > 1
+        ? _developmentVersion.split('+')[1]
+        : '0';
   }
 
   static String get fullVersion {
@@ -77,6 +129,7 @@ class AppVersion {
       return _rawFullVersion;
     }
 
+    // Development fallback: construct from components
     return '$editionCode-$baseVersion+$buildNumber';
   }
 }

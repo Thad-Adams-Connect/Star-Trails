@@ -8,8 +8,11 @@ import 'package:provider/provider.dart';
 import 'providers/game_provider.dart';
 import 'screens/menu_screen.dart';
 import 'utils/theme.dart';
+import 'utils/app_version.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await AppVersion.initialize();
   runApp(const StarTrailsApp());
 }
 

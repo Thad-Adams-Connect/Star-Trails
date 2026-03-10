@@ -14,8 +14,21 @@ import '../utils/app_version.dart';
 import 'player_identity_screen.dart';
 import '../utils/pixel_route.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Refresh version data when settings screen opens to ensure
+    // it displays the current version after game updates
+    AppVersion.refresh();
+  }
 
   @override
   Widget build(BuildContext context) {
