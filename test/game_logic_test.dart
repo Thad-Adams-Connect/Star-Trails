@@ -9,6 +9,8 @@ import 'package:star_trails/models/game_state.dart';
 import 'package:star_trails/models/planet.dart';
 import 'package:star_trails/models/cr_access_state.dart';
 import 'package:star_trails/providers/game_provider.dart';
+import 'package:star_trails/services/teacher_dashboard_service.dart';
+import 'package:star_trails/utils/app_version.dart';
 import 'package:star_trails/utils/constants.dart';
 
 void main() {
@@ -195,6 +197,70 @@ void main() {
 
       expect(restored.id, equals(planet.id));
       expect(restored.demandIndex, equals(planet.demandIndex));
+    });
+  });
+
+  group('Versioned Save Reset Policy', () {
+    const saveResetReleaseLineKey = 'save_data_release_line_v1';
+
+    String currentReleaseLine() {
+      final versionMatch =
+          RegExp(r'^(\d+)\.(\d+)').firstMatch(AppVersion.baseVersion);
+      if (versionMatch == null) {
+        return AppVersion.baseVersion;
+      }
+      return '${versionMatch.group(1)}.${versionMatch.group(2)}';
+    }
+
+    setUp(() {
+      SharedPreferences.setMockInitialValues({});
+    });
+
+    test(
+        'Changing release line clears saved dashboard/device-linked data',
+        () async {
+      final seededDashboard = TeacherDashboardService();
+      await seededDashboard.initialize();
+      await seededDashboard.startSession();
+      final previousDeviceId = seededDashboard.getDeviceId();
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(saveResetReleaseLineKey, '0.9');
+
+      final provider = GameProvider();
+      final loaded = await provider.loadGame();
+
+      expect(loaded, isFalse);
+      expect(provider.dashboard.getSessions(), isEmpty);
+      expect(provider.dashboard.getDeviceId(), isNot(equals(previousDeviceId)));
+      expect(
+        prefs.getString(saveResetReleaseLineKey),
+        equals(currentReleaseLine()),
+      );
+    });
+
+    test('Matching release line preserves existing dashboard data', () async {
+      final seededDashboard = TeacherDashboardService();
+      await seededDashboard.initialize();
+      await seededDashboard.startSession();
+      final previousDeviceId = seededDashboard.getDeviceId();
+      final previousSessionCount = seededDashboard.getSessions().length;
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(saveResetReleaseLineKey, currentReleaseLine());
+
+      final provider = GameProvider();
+      await provider.loadGame();
+
+      expect(provider.dashboard.getDeviceId(), equals(previousDeviceId));
+      expect(
+        provider.dashboard.getSessions().length,
+        equals(previousSessionCount),
+      );
+      expect(
+        prefs.getString(saveResetReleaseLineKey),
+        equals(currentReleaseLine()),
+      );
     });
   });
 

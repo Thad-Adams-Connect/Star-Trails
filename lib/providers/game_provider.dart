@@ -4,6 +4,7 @@
 // Unauthorized copying, modification, distribution, or reverse engineering prohibited.
 
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 import '../models/game_state.dart';
 import '../models/planet.dart';
@@ -12,6 +13,7 @@ import '../models/cr_access_state.dart';
 import '../services/persistence_service.dart';
 import '../services/teacher_dashboard_service.dart';
 import '../services/wisdom_engine.dart';
+import '../utils/app_version.dart';
 import '../utils/constants.dart';
 import '../data/intro_story.dart';
 import '../data/system_histories.dart';
@@ -32,6 +34,8 @@ class GameProvider extends ChangeNotifier {
     'Market Snapshot — Helios Reach',
     'Your First Choice',
   };
+  static const String _saveResetReleaseLineKey =
+      'save_data_release_line_v1';
 
   GameState _state = GameState.initial();
   final PersistenceService _persistence = PersistenceService();
@@ -177,11 +181,46 @@ class GameProvider extends ChangeNotifier {
     }
   }
 
+  GameState _withCurrentVersionMetadata(GameState state) {
+    return state.copyWith(
+      edition: AppVersion.editionCode,
+      gameVersion: AppVersion.fullVersion,
+    );
+  }
+
+  String _currentReleaseLine() {
+    final versionMatch =
+        RegExp(r'^(\d+)\.(\d+)').firstMatch(AppVersion.baseVersion);
+    if (versionMatch == null) {
+      return AppVersion.baseVersion;
+    }
+
+    return '${versionMatch.group(1)}.${versionMatch.group(2)}';
+  }
+
+  Future<void> _enforceReleaseResetPolicy() async {
+    final prefs = await SharedPreferences.getInstance();
+    final currentReleaseLine = _currentReleaseLine();
+    final savedReleaseLine = prefs.getString(_saveResetReleaseLineKey);
+
+    // If release line changes (for example 1.0.x -> 1.1.x),
+    // start fully fresh by wiping game save + dashboard/device-linked data.
+    if (savedReleaseLine != null && savedReleaseLine != currentReleaseLine) {
+      await _persistence.clearGameState();
+      await _dashboard.clearAll();
+      _state = _withCurrentVersionMetadata(GameState.initial());
+      _sessionIsGameOver = false;
+    }
+
+    await prefs.setString(_saveResetReleaseLineKey, currentReleaseLine);
+  }
+
   Future<bool> loadGame() async {
+    await _enforceReleaseResetPolicy();
     await _dashboard.initialize();
     final loadedState = await _persistence.loadGameState();
     if (loadedState != null) {
-      _state = loadedState;
+      _state = _withCurrentVersionMetadata(loadedState);
 
       // Sync names from game state to dashboard if needed
       final dashboardData = _dashboard.getData();
@@ -212,10 +251,11 @@ class GameProvider extends ChangeNotifier {
     _showEduPrompt = false;
     _currentEduPrompt = '';
 
+    await _enforceReleaseResetPolicy();
     await _dashboard.initialize();
     await _dashboard.startSession();
     await _persistence.clearGameState();
-    _state = GameState.initial();
+    _state = _withCurrentVersionMetadata(GameState.initial());
 
     // Sync names from dashboard to game state
     final dashboardData = _dashboard.getData();
@@ -298,7 +338,7 @@ class GameProvider extends ChangeNotifier {
   Future<void> _runSaveLoop() async {
     do {
       _saveQueued = false;
-      final snapshot = _state;
+      final snapshot = _withCurrentVersionMetadata(_state);
       await _persistence.saveGameState(snapshot);
     } while (_saveQueued);
   }
