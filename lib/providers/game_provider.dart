@@ -34,14 +34,13 @@ class GameProvider extends ChangeNotifier {
     'Market Snapshot — Helios Reach',
     'Your First Choice',
   };
-  static const String _saveResetReleaseLineKey =
-      'save_data_release_line_v1';
+  static const String _saveResetReleaseLineKey = 'save_data_release_line_v1';
 
   GameState _state = GameState.initial();
   final PersistenceService _persistence = PersistenceService();
   final TeacherDashboardService _dashboard = TeacherDashboardService();
   final WisdomEngine _wisdomEngine = WisdomEngine();
-  final StreamController<WisdomEntry> _wisdomStreamController = 
+  final StreamController<WisdomEntry> _wisdomStreamController =
       StreamController<WisdomEntry>.broadcast();
   bool _sessionIsGameOver = false;
   bool _eduPromptsEnabled = true;
@@ -161,7 +160,7 @@ class GameProvider extends ChangeNotifier {
   void _triggerWisdom(List<String> contextTags) {
     if (!_wisdomEnabled) return;
     if (!_wisdomEngine.canShowWisdom(minMinutesBetween: 3)) return;
-    
+
     final wisdom = _wisdomEngine.selectWisdom(contextTags);
     if (wisdom != null) {
       _wisdomStreamController.add(wisdom);
@@ -171,7 +170,7 @@ class GameProvider extends ChangeNotifier {
   /// Mark wisdom as shown and optionally save to logbook.
   void markWisdomShown(WisdomEntry wisdom, {bool savedToLogbook = false}) {
     _wisdomEngine.markWisdomShown(wisdom, savedToLogbook: savedToLogbook);
-    
+
     // Save to dashboard if requested
     if (savedToLogbook) {
       unawaited(_dashboard.addWisdomEntry(
@@ -250,9 +249,11 @@ class GameProvider extends ChangeNotifier {
     _pendingNarrativeSystemId = null;
     _showEduPrompt = false;
     _currentEduPrompt = '';
+    _wisdomEngine.clearSessionWisdom();
 
     await _enforceReleaseResetPolicy();
     await _dashboard.initialize();
+    await _dashboard.clearNewGameLogbookData();
     await _dashboard.startSession();
     await _persistence.clearGameState();
     _state = _withCurrentVersionMetadata(GameState.initial());
@@ -285,7 +286,7 @@ class GameProvider extends ChangeNotifier {
 
     _updateState(_state.resetSessionStats());
     _sessionIsGameOver = false;
-    
+
     // Display help output on session continue
     _displayHelpOnSessionContinue();
   }
@@ -478,7 +479,8 @@ class GameProvider extends ChangeNotifier {
     _addLog('');
 
     // Show only unlocked systems and commodities
-    final availableSystems = GameConstants.getAvailableSystems(_state.tierAccessStates);
+    final availableSystems =
+        GameConstants.getAvailableSystems(_state.tierAccessStates);
     final availableCommodities =
         GameConstants.getAvailableCommodities(_state.tierAccessStates);
 
@@ -531,7 +533,8 @@ class GameProvider extends ChangeNotifier {
     _addLog('');
 
     // Show only unlocked systems and commodities
-    final availableSystems = GameConstants.getAvailableSystems(_state.tierAccessStates);
+    final availableSystems =
+        GameConstants.getAvailableSystems(_state.tierAccessStates);
     final availableCommodities =
         GameConstants.getAvailableCommodities(_state.tierAccessStates);
 
@@ -581,7 +584,8 @@ class GameProvider extends ChangeNotifier {
         }
 
         // Check if system is unlocked
-        if (!GameConstants.isSystemUnlocked(systemInput, _state.tierAccessStates)) {
+        if (!GameConstants.isSystemUnlocked(
+            systemInput, _state.tierAccessStates)) {
           _addLog('System $systemInput is not yet unlocked.');
           return;
         }
@@ -1626,13 +1630,14 @@ class GameProvider extends ChangeNotifier {
         unawaited(_dashboard.addSystemEntry(
           sessionId: sessionId,
           systemId: systemId,
-          historyText: narrativeText.isNotEmpty ? narrativeText : 'System Entered',
+          historyText:
+              narrativeText.isNotEmpty ? narrativeText : 'System Entered',
         ));
       }
     }
 
     saveGame();
-    
+
     // Trigger rebuild for Logbook to update history display
     notifyListeners();
   }
@@ -1788,59 +1793,62 @@ class GameProvider extends ChangeNotifier {
   }
 
   /// Check and update access level discovery based on current credit balance.
-  /// 
+  ///
   /// Access level discovery is permanent - once a level reaches its threshold, it's marked as discovered.
   /// Access control uses hysteresis: drops at 60% threshold, reactivates at 80%.
   void _checkAndUpdateUnlocks() {
     final currentCredits = _state.credits;
-    var updatedTierStates = Map<String, CRAccessState>.from(_state.tierAccessStates);
+    var updatedTierStates =
+        Map<String, CRAccessState>.from(_state.tierAccessStates);
     bool updated = false;
-    
+
     // Check each tier for discovery and access control
     for (int tierNum = 1; tierNum <= 4; tierNum++) {
       final tierKey = tierNum.toString();
       final oldState = updatedTierStates[tierKey]!;
       final threshold = CRAccessConfig.getThreshold(tierNum);
-      
+
       // Mark tier as discovered if threshold is reached (permanent)
       bool discovered = oldState.discovered;
       bool showAchievementMessage = false;
-      
+
       if (!discovered && currentCredits >= threshold) {
         discovered = true;
         showAchievementMessage = true;
         updated = true;
       }
-      
+
       // Calculate access active status using hysteresis logic
-      bool accessActive = discovered 
+      bool accessActive = discovered
           ? CRAccessConfig.calculateAccessActive(
               currentCredits,
               threshold,
               oldState.accessActive,
             )
           : false;
-      
+
       // Check if access status changed for discovered tiers
       bool accessLost = discovered && oldState.accessActive && !accessActive;
-      bool accessRegained = discovered && !oldState.accessActive && accessActive;
-      
+      bool accessRegained =
+          discovered && !oldState.accessActive && accessActive;
+
       // Update state if anything changed
-      if (discovered != oldState.discovered || accessActive != oldState.accessActive) {
+      if (discovered != oldState.discovered ||
+          accessActive != oldState.accessActive) {
         updatedTierStates[tierKey] = CRAccessState(
           discovered: discovered,
           accessActive: accessActive,
         );
         updated = true;
       }
-      
+
       // Show achievement message for new discovery
       if (showAchievementMessage) {
         _addLog('');
         _addLog('═══ ACCESS GRANTED ═══');
         _addLog('at $threshold Credits');
         _addLog('');
-        
+
         if (tierNum == 1) {
           _addLog('NEW SYSTEMS:');
           _addLog('  • Orivault Complex');
@@ -1851,8 +1859,10 @@ class GameProvider extends ChangeNotifier {
           _addLog('');
           _addLog('NEW UPGRADE:');
           _addLog('  • Computer');
-          _addLog('    - Enhanced: TRIP command (${GameConstants.upgradeCosts['computer']![1]} cr)');
-          _addLog('    - Advanced: MARKET command (${GameConstants.upgradeCosts['computer']![2]} cr)');
+          _addLog(
+              '    - Enhanced: TRIP command (${GameConstants.upgradeCosts['computer']![1]} cr)');
+          _addLog(
+              '    - Advanced: MARKET command (${GameConstants.upgradeCosts['computer']![2]} cr)');
         } else if (tierNum == 2) {
           _addLog('NEW SYSTEMS:');
           _addLog('  • Fluxhaven Institute');
@@ -1863,8 +1873,10 @@ class GameProvider extends ChangeNotifier {
           _addLog('');
           _addLog('NEW UPGRADE:');
           _addLog('  • Engine');
-          _addLog('    - Enhanced: -1 fuel per trip (${GameConstants.upgradeCosts['engine']![1]} cr)');
-          _addLog('    - Advanced: -2 fuel per trip (${GameConstants.upgradeCosts['engine']![2]} cr)');
+          _addLog(
+              '    - Enhanced: -1 fuel per trip (${GameConstants.upgradeCosts['engine']![1]} cr)');
+          _addLog(
+              '    - Advanced: -2 fuel per trip (${GameConstants.upgradeCosts['engine']![2]} cr)');
         } else if (tierNum == 3) {
           _addLog('NEW SYSTEMS:');
           _addLog('  • Gateforge Bastion');
@@ -1884,28 +1896,31 @@ class GameProvider extends ChangeNotifier {
           _addLog('');
           _addLog('ACHIEVEMENT: Full star map now available!');
         }
-        
+
         _addLog('════════════════════════════');
         _addLog('');
       }
-      
+
       // Show message when access is lost
       if (accessLost) {
         _addLog('');
         _addLog('═══ ACCESS SUSPENDED ═══');
-        _addLog('Credits dropped below ${CRAccessConfig.getLockThreshold(tierNum)}');
+        _addLog(
+            'Credits dropped below ${CRAccessConfig.getLockThreshold(tierNum)}');
         _addLog('');
         _addLog('System access limited.');
-        _addLog('Reach ${CRAccessConfig.getReactivateThreshold(tierNum)} cr to restore.');
+        _addLog(
+            'Reach ${CRAccessConfig.getReactivateThreshold(tierNum)} cr to restore.');
         _addLog('════════════════════════════');
         _addLog('');
       }
-      
+
       // Show message when access is regained
       if (accessRegained) {
         _addLog('');
         _addLog('═══ ACCESS RESTORED ═══');
-        _addLog('Reached ${CRAccessConfig.getReactivateThreshold(tierNum)} Credits');
+        _addLog(
+            'Reached ${CRAccessConfig.getReactivateThreshold(tierNum)} Credits');
         _addLog('');
         _addLog('System access restored.');
         _addLog('════════════════════════════');

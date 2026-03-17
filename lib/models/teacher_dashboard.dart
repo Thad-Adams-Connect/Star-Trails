@@ -16,6 +16,7 @@ class TeacherDashboardData {
   final List<ReflectionRecord> reflections;
   final List<SystemEntryRecord> systemEntries;
   final List<WisdomDisplayRecord> wisdomEntries;
+  final List<TradingCalculationRecord> tradingCalculations;
 
   TeacherDashboardData({
     required this.deviceId,
@@ -26,6 +27,7 @@ class TeacherDashboardData {
     this.reflections = const [],
     this.systemEntries = const [],
     this.wisdomEntries = const [],
+    this.tradingCalculations = const [],
   });
 
   /// Convert to JSON for persistence.
@@ -39,6 +41,8 @@ class TeacherDashboardData {
       'reflections': reflections.map((r) => r.toJson()).toList(),
       'systemEntries': systemEntries.map((e) => e.toJson()).toList(),
       'wisdomEntries': wisdomEntries.map((w) => w.toJson()).toList(),
+      'tradingCalculations':
+          tradingCalculations.map((c) => c.toJson()).toList(),
     };
   }
 
@@ -69,6 +73,11 @@ class TeacherDashboardData {
               .map(WisdomDisplayRecord.fromJson)
               .toList() ??
           [],
+      tradingCalculations: (json['tradingCalculations'] as List?)
+              ?.cast<Map<String, dynamic>>()
+              .map(TradingCalculationRecord.fromJson)
+              .toList() ??
+          [],
     );
   }
 
@@ -82,6 +91,7 @@ class TeacherDashboardData {
     List<ReflectionRecord>? reflections,
     List<SystemEntryRecord>? systemEntries,
     List<WisdomDisplayRecord>? wisdomEntries,
+    List<TradingCalculationRecord>? tradingCalculations,
   }) {
     return TeacherDashboardData(
       deviceId: deviceId ?? this.deviceId,
@@ -92,6 +102,7 @@ class TeacherDashboardData {
       reflections: reflections ?? this.reflections,
       systemEntries: systemEntries ?? this.systemEntries,
       wisdomEntries: wisdomEntries ?? this.wisdomEntries,
+      tradingCalculations: tradingCalculations ?? this.tradingCalculations,
     );
   }
 }
@@ -367,6 +378,64 @@ class WisdomDisplayRecord {
       timestamp: timestamp ?? this.timestamp,
       text: text ?? this.text,
       gradeTier: gradeTier ?? this.gradeTier,
+    );
+  }
+}
+
+class TradingCalculationRecord {
+  final String id;
+  final DateTime timestamp;
+  final int buyPrice;
+  final int sellPrice;
+  final int quantity;
+  final int projectedProfit;
+
+  TradingCalculationRecord({
+    required this.id,
+    required this.timestamp,
+    required this.buyPrice,
+    required this.sellPrice,
+    required this.quantity,
+    required this.projectedProfit,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'timestamp': timestamp.toIso8601String(),
+      'buyPrice': buyPrice,
+      'sellPrice': sellPrice,
+      'quantity': quantity,
+      'projectedProfit': projectedProfit,
+    };
+  }
+
+  factory TradingCalculationRecord.fromJson(Map<String, dynamic> json) {
+    return TradingCalculationRecord(
+      id: json['id'] as String? ?? '',
+      timestamp: DateTime.parse(json['timestamp'] as String),
+      buyPrice: json['buyPrice'] as int? ?? 0,
+      sellPrice: json['sellPrice'] as int? ?? 0,
+      quantity: json['quantity'] as int? ?? 0,
+      projectedProfit: json['projectedProfit'] as int? ?? 0,
+    );
+  }
+
+  TradingCalculationRecord copyWith({
+    String? id,
+    DateTime? timestamp,
+    int? buyPrice,
+    int? sellPrice,
+    int? quantity,
+    int? projectedProfit,
+  }) {
+    return TradingCalculationRecord(
+      id: id ?? this.id,
+      timestamp: timestamp ?? this.timestamp,
+      buyPrice: buyPrice ?? this.buyPrice,
+      sellPrice: sellPrice ?? this.sellPrice,
+      quantity: quantity ?? this.quantity,
+      projectedProfit: projectedProfit ?? this.projectedProfit,
     );
   }
 }

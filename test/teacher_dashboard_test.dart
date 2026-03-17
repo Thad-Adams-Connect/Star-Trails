@@ -22,6 +22,7 @@ void main() {
       expect(data.totalPlaytimeMs, 0);
       expect(data.sessions, isEmpty);
       expect(data.reflections, isEmpty);
+      expect(data.tradingCalculations, isEmpty);
     });
 
     test('TeacherDashboardData serialization roundtrip', () {
@@ -48,6 +49,16 @@ void main() {
             answer: 'I learned about trading',
           ),
         ],
+        tradingCalculations: [
+          TradingCalculationRecord(
+            id: 'calc-1',
+            timestamp: DateTime(2024, 1, 1, 10, 20),
+            buyPrice: 12,
+            sellPrice: 20,
+            quantity: 3,
+            projectedProfit: 24,
+          ),
+        ],
       );
 
       final json = original.toJson();
@@ -57,6 +68,10 @@ void main() {
       expect(restored.totalPlaytimeMs, original.totalPlaytimeMs);
       expect(restored.sessions.length, original.sessions.length);
       expect(restored.reflections.length, original.reflections.length);
+      expect(
+        restored.tradingCalculations.length,
+        original.tradingCalculations.length,
+      );
     });
 
     test('SessionRecord copyWith updates fields', () {
@@ -205,6 +220,33 @@ void main() {
       expect(json.contains('deviceId'), true);
       expect(json.contains('sessions'), true);
       expect(json.contains('reflections'), true);
+    });
+
+    test('Trading calculations can be added and cleared for a new game',
+        () async {
+      await service.initialize();
+      await service.startSession();
+      await service.addWisdomEntry(
+        text: 'Plan before you trade.',
+        gradeTier: '4-6',
+      );
+      await service.addTradingCalculation(
+        buyPrice: 7,
+        sellPrice: 13,
+        quantity: 4,
+      );
+
+      var data = service.getData();
+      expect(data.wisdomEntries.length, 1);
+      expect(data.tradingCalculations.length, 1);
+      expect(data.tradingCalculations.single.projectedProfit, 24);
+
+      await service.clearNewGameLogbookData();
+
+      data = service.getData();
+      expect(data.sessions.length, 1);
+      expect(data.wisdomEntries, isEmpty);
+      expect(data.tradingCalculations, isEmpty);
     });
 
     test('Multiple sessions are tracked independently', () async {

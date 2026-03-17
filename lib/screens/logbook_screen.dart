@@ -4,6 +4,7 @@
 // Unauthorized copying, modification, distribution, or reverse engineering prohibited.
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../data/intro_story.dart';
 import '../data/system_histories.dart';
@@ -204,10 +205,13 @@ class _LogbookScreenState extends State<LogbookScreen> {
                                           systemEntriesBySession:
                                               systemEntriesBySession,
                                           sessionNumberById: sessionNumberById,
-                                          captainName: provider.state.captainName,
+                                          captainName:
+                                              provider.state.captainName,
                                           shipName: provider.state.shipName,
-                                          isIntroActive: provider.state.isIntroActive,
-                                          firstChoiceActive: provider.state.firstChoiceActive,
+                                          isIntroActive:
+                                              provider.state.isIntroActive,
+                                          firstChoiceActive:
+                                              provider.state.firstChoiceActive,
                                         ),
                                         _WordsOfWisdomSection(
                                           wisdomEntries: allWisdom,
@@ -250,7 +254,7 @@ class _LogbookScreenState extends State<LogbookScreen> {
     // Return wisdom text in reverse chronological order (newest first)
     final sortedWisdom = [...wisdomEntries]
       ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
-    
+
     return [for (final entry in sortedWisdom) entry.text];
   }
 
@@ -482,11 +486,13 @@ class _IntroAndHistoriesSection extends StatelessWidget {
 
   String _getPersonalizedIntro() {
     var personalizedIntro = introStoryText;
-    
-    final resolvedShipName =
-        shipName.trim().isNotEmpty ? shipName.trim() : 'Opportunity for ship name';
-    final resolvedCaptainName =
-        captainName.trim().isNotEmpty ? captainName.trim() : 'Opportunity for name';
+
+    final resolvedShipName = shipName.trim().isNotEmpty
+        ? shipName.trim()
+        : 'Opportunity for ship name';
+    final resolvedCaptainName = captainName.trim().isNotEmpty
+        ? captainName.trim()
+        : 'Opportunity for name';
 
     personalizedIntro = personalizedIntro.replaceFirst(
       '[SHIP_NAME]',
@@ -511,7 +517,8 @@ class _IntroAndHistoriesSection extends StatelessWidget {
           _NotebookSectionCard(
             title: 'Game Introduction',
             child: const _StructuredParagraphText(
-              text: 'The introduction sequence is currently playing...\n\nOnce you complete the intro and begin your first trading run, your personalized introduction will appear here.',
+              text:
+                  'The introduction sequence is currently playing...\n\nOnce you complete the intro and begin your first trading run, your personalized introduction will appear here.',
             ),
           ),
           const SizedBox(height: 20),
@@ -575,7 +582,8 @@ class _IntroAndHistoriesSection extends StatelessWidget {
           const SizedBox(height: 8),
           _NotebookSectionCard(
             title: history.key,
-            subtitle: 'Discovered: ${discoveredSystems[history.key]!.join(', ')}',
+            subtitle:
+                'Discovered: ${discoveredSystems[history.key]!.join(', ')}',
             child: _StructuredParagraphText(text: history.value),
           ),
           const SizedBox(height: 20),
@@ -628,6 +636,147 @@ class _CalculatorsSectionState extends State<_CalculatorsSection> {
   final TextEditingController _buyPriceController = TextEditingController();
   final TextEditingController _sellPriceController = TextEditingController();
   final TextEditingController _quantityController = TextEditingController();
+  int? _historyIndex;
+  String _historyDraftBuyPrice = '';
+  String _historyDraftSellPrice = '';
+  String _historyDraftQuantity = '';
+
+  void _handleFieldChanged(String _) {
+    if (_historyIndex != null) {
+      _historyIndex = null;
+      _historyDraftBuyPrice = _buyPriceController.text;
+      _historyDraftSellPrice = _sellPriceController.text;
+      _historyDraftQuantity = _quantityController.text;
+    }
+
+    setState(() {});
+  }
+
+  KeyEventResult _onCalculationInputKeyEvent(
+    KeyEvent event,
+    List<TradingCalculationRecord> calculationHistory,
+  ) {
+    if (event is! KeyDownEvent || calculationHistory.isEmpty) {
+      return KeyEventResult.ignored;
+    }
+
+    if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+      _navigateCalculationHistory(-1, calculationHistory);
+      return KeyEventResult.handled;
+    }
+
+    if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+      _navigateCalculationHistory(1, calculationHistory);
+      return KeyEventResult.handled;
+    }
+
+    return KeyEventResult.ignored;
+  }
+
+  void _navigateCalculationHistory(
+    int direction,
+    List<TradingCalculationRecord> calculationHistory,
+  ) {
+    if (calculationHistory.isEmpty) {
+      return;
+    }
+
+    if (_historyIndex == null) {
+      if (direction > 0) {
+        return;
+      }
+
+      _historyDraftBuyPrice = _buyPriceController.text;
+      _historyDraftSellPrice = _sellPriceController.text;
+      _historyDraftQuantity = _quantityController.text;
+      _historyIndex = 0;
+      _setCalculationInputs(calculationHistory[_historyIndex!]);
+      setState(() {});
+      return;
+    }
+
+    final nextIndex = _historyIndex! - direction;
+    if (nextIndex < 0) {
+      _historyIndex = null;
+      _restoreCalculationDraft();
+      setState(() {});
+      return;
+    }
+
+    if (nextIndex >= calculationHistory.length) {
+      _historyIndex = null;
+      _restoreCalculationDraft();
+      setState(() {});
+      return;
+    }
+
+    _historyIndex = nextIndex;
+    _setCalculationInputs(calculationHistory[_historyIndex!]);
+    setState(() {});
+  }
+
+  void _setCalculationInputs(TradingCalculationRecord calculation) {
+    _setControllerValue(_buyPriceController, '${calculation.buyPrice}');
+    _setControllerValue(_sellPriceController, '${calculation.sellPrice}');
+    _setControllerValue(_quantityController, '${calculation.quantity}');
+  }
+
+  void _restoreCalculationDraft() {
+    _setControllerValue(_buyPriceController, _historyDraftBuyPrice);
+    _setControllerValue(_sellPriceController, _historyDraftSellPrice);
+    _setControllerValue(_quantityController, _historyDraftQuantity);
+  }
+
+  void _setControllerValue(TextEditingController controller, String value) {
+    controller.value = TextEditingValue(
+      text: value,
+      selection: TextSelection.collapsed(offset: value.length),
+    );
+  }
+
+  Future<void> _saveCalculation() async {
+    final buyPrice = int.tryParse(_buyPriceController.text.trim());
+    final sellPrice = int.tryParse(_sellPriceController.text.trim());
+    final quantity = int.tryParse(_quantityController.text.trim());
+
+    if (buyPrice == null || sellPrice == null || quantity == null) {
+      return;
+    }
+
+    final provider = context.read<GameProvider>();
+    await provider.dashboard.addTradingCalculation(
+      buyPrice: buyPrice,
+      sellPrice: sellPrice,
+      quantity: quantity,
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    _historyIndex = null;
+    FocusScope.of(context).unfocus();
+    setState(() {});
+  }
+
+  void _clearInputs() {
+    _buyPriceController.clear();
+    _sellPriceController.clear();
+    _quantityController.clear();
+    _historyIndex = null;
+    _historyDraftBuyPrice = '';
+    _historyDraftSellPrice = '';
+    _historyDraftQuantity = '';
+    setState(() {});
+  }
+
+  String _formatCalculationTimestamp(DateTime timestamp) {
+    final local = timestamp.toLocal();
+    final hour = local.hour % 12 == 0 ? 12 : local.hour % 12;
+    final minute = local.minute.toString().padLeft(2, '0');
+    final meridiem = local.hour >= 12 ? 'PM' : 'AM';
+    return '${local.month}/${local.day}/${local.year} $hour:$minute $meridiem';
+  }
 
   @override
   void dispose() {
@@ -639,12 +788,16 @@ class _CalculatorsSectionState extends State<_CalculatorsSection> {
 
   @override
   Widget build(BuildContext context) {
+    final dashboard = context.read<GameProvider>().dashboard;
+    final calculationHistory =
+        dashboard.getTradingCalculations().reversed.toList();
     final buyPrice = int.tryParse(_buyPriceController.text.trim());
     final sellPrice = int.tryParse(_sellPriceController.text.trim());
     final quantity = int.tryParse(_quantityController.text.trim());
-    final tradeProfit = (buyPrice != null && sellPrice != null && quantity != null)
-        ? (sellPrice - buyPrice) * quantity
-        : null;
+    final hasValidInputs =
+        buyPrice != null && sellPrice != null && quantity != null;
+    final tradeProfit =
+        hasValidInputs ? (sellPrice - buyPrice) * quantity : null;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -690,7 +843,9 @@ class _CalculatorsSectionState extends State<_CalculatorsSection> {
                     child: _CalcField(
                       label: 'Buy Price',
                       controller: _buyPriceController,
-                      onChanged: (_) => setState(() {}),
+                      onChanged: _handleFieldChanged,
+                      onKeyEvent: (event) => _onCalculationInputKeyEvent(
+                          event, calculationHistory),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -698,7 +853,9 @@ class _CalculatorsSectionState extends State<_CalculatorsSection> {
                     child: _CalcField(
                       label: 'Sell Price',
                       controller: _sellPriceController,
-                      onChanged: (_) => setState(() {}),
+                      onChanged: _handleFieldChanged,
+                      onKeyEvent: (event) => _onCalculationInputKeyEvent(
+                          event, calculationHistory),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -706,7 +863,9 @@ class _CalculatorsSectionState extends State<_CalculatorsSection> {
                     child: _CalcField(
                       label: 'Quantity',
                       controller: _quantityController,
-                      onChanged: (_) => setState(() {}),
+                      onChanged: _handleFieldChanged,
+                      onKeyEvent: (event) => _onCalculationInputKeyEvent(
+                          event, calculationHistory),
                     ),
                   ),
                 ],
@@ -714,13 +873,91 @@ class _CalculatorsSectionState extends State<_CalculatorsSection> {
               const SizedBox(height: 12),
               _MetricRow(
                 label: 'Projected Profit',
-                value: tradeProfit == null ? 'N/A' : '$tradeProfit',
+                value: tradeProfit == null ? 'N/A' : '$tradeProfit cr',
                 highlight: tradeProfit != null,
                 positive: (tradeProfit ?? 0) >= 0,
+              ),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: hasValidInputs ? _saveCalculation : null,
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        side: BorderSide(
+                          color: AppTheme.phosphorGreen.withValues(alpha: 0.65),
+                        ),
+                        foregroundColor: AppTheme.phosphorGreenBright,
+                        textStyle: AppTheme.terminalBody.copyWith(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
+                      ),
+                      child: const Text('ADD TO HISTORY'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: _clearInputs,
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        side: BorderSide(
+                          color: Colors.white.withValues(alpha: 0.18),
+                        ),
+                        foregroundColor: Colors.white70,
+                        textStyle: AppTheme.terminalBody.copyWith(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
+                      ),
+                      child: const Text('CLEAR FIELDS'),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
         ),
+        if (calculationHistory.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          for (var index = 0; index < calculationHistory.length; index++) ...[
+            _NotebookSectionCard(
+              title: 'Calculation ${calculationHistory.length - index}',
+              subtitle:
+                  'Trading Calculator • ${_formatCalculationTimestamp(calculationHistory[index].timestamp)}',
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Buy: ${calculationHistory[index].buyPrice} cr  |  Sell: ${calculationHistory[index].sellPrice} cr  |  Qty: ${calculationHistory[index].quantity}',
+                    style: AppTheme.terminalBody.copyWith(
+                      color: Colors.white70,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    '(${calculationHistory[index].sellPrice} - ${calculationHistory[index].buyPrice}) × ${calculationHistory[index].quantity}',
+                    style: AppTheme.terminalBody.copyWith(
+                      color: AppTheme.phosphorGreenBright,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  _MetricRow(
+                    label: 'Projected Profit',
+                    value: '${calculationHistory[index].projectedProfit} cr',
+                    highlight: true,
+                    positive: calculationHistory[index].projectedProfit >= 0,
+                  ),
+                ],
+              ),
+            ),
+            if (index < calculationHistory.length - 1)
+              const SizedBox(height: 16),
+          ],
+        ],
       ],
     );
   }
@@ -862,11 +1099,13 @@ class _CalcField extends StatelessWidget {
   final String label;
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
+  final KeyEventResult Function(KeyEvent event)? onKeyEvent;
 
   const _CalcField({
     required this.label,
     required this.controller,
     required this.onChanged,
+    this.onKeyEvent,
   });
 
   @override
@@ -883,34 +1122,38 @@ class _CalcField extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 6),
-        TextField(
-          controller: controller,
-          onChanged: onChanged,
-          keyboardType: TextInputType.number,
-          style: AppTheme.terminalBody,
-          decoration: InputDecoration(
-            isDense: true,
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-            filled: true,
-            fillColor: Colors.black.withValues(alpha: 0.45),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
-              borderSide: BorderSide(
-                color: AppTheme.phosphorGreen.withValues(alpha: 0.6),
+        Focus(
+          onKeyEvent:
+              onKeyEvent == null ? null : (_, event) => onKeyEvent!(event),
+          child: TextField(
+            controller: controller,
+            onChanged: onChanged,
+            keyboardType: TextInputType.number,
+            style: AppTheme.terminalBody,
+            decoration: InputDecoration(
+              isDense: true,
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+              filled: true,
+              fillColor: Colors.black.withValues(alpha: 0.45),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(6),
+                borderSide: BorderSide(
+                  color: AppTheme.phosphorGreen.withValues(alpha: 0.6),
+                ),
               ),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
-              borderSide: BorderSide(
-                color: AppTheme.phosphorGreen.withValues(alpha: 0.8),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(6),
+                borderSide: BorderSide(
+                  color: AppTheme.phosphorGreen.withValues(alpha: 0.8),
+                ),
               ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
-              borderSide: const BorderSide(
-                color: AppTheme.phosphorGreenBright,
-                width: 2,
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(6),
+                borderSide: const BorderSide(
+                  color: AppTheme.phosphorGreenBright,
+                  width: 2,
+                ),
               ),
             ),
           ),

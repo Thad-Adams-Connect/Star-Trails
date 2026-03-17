@@ -204,8 +204,34 @@ class TeacherDashboardService {
     return _data;
   }
 
+  /// Add a trading calculator history record.
+  Future<TeacherDashboardData> addTradingCalculation({
+    required int buyPrice,
+    required int sellPrice,
+    required int quantity,
+  }) async {
+    await _ensureInitialized();
+    final projectedProfit = (sellPrice - buyPrice) * quantity;
+    final entry = TradingCalculationRecord(
+      id: _generateUniqueId(),
+      timestamp: DateTime.now(),
+      buyPrice: buyPrice,
+      sellPrice: sellPrice,
+      quantity: quantity,
+      projectedProfit: projectedProfit,
+    );
+    final updatedEntries = [..._data.tradingCalculations, entry];
+    _data = _data.copyWith(tradingCalculations: updatedEntries);
+    await _save();
+    return _data;
+  }
+
   /// Get all wisdom entries.
   List<WisdomDisplayRecord> getWisdomEntries() => _data.wisdomEntries;
+
+  /// Get all saved trading calculations.
+  List<TradingCalculationRecord> getTradingCalculations() =>
+      _data.tradingCalculations;
 
   /// Get all reflection records.
   List<ReflectionRecord> getReflections() => _data.reflections;
@@ -248,6 +274,17 @@ class TeacherDashboardService {
 
   /// Get total playtime in milliseconds.
   int getTotalPlaytimeMs() => _data.totalPlaytimeMs;
+
+  /// Clear logbook data that should restart fresh with a new game.
+  Future<TeacherDashboardData> clearNewGameLogbookData() async {
+    await _ensureInitialized();
+    _data = _data.copyWith(
+      wisdomEntries: const [],
+      tradingCalculations: const [],
+    );
+    await _save();
+    return _data;
+  }
 
   /// Clear all teacher dashboard data (including device ID).
   Future<void> clearAll() async {

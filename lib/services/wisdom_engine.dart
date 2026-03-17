@@ -11,7 +11,7 @@ import '../data/wisdom_entries.dart';
 class WisdomEngine {
   final Random _random = Random();
   final Map<String, DateTime> _lastShownTimestamps = {};
-  
+
   /// Track wisdom shown in current session (for logbook display)
   final List<DisplayedWisdom> _sessionWisdom = [];
 
@@ -21,6 +21,7 @@ class WisdomEngine {
   /// Clear session wisdom (call when starting new game)
   void clearSessionWisdom() {
     _sessionWisdom.clear();
+    _lastShownTimestamps.clear();
   }
 
   /// Select contextual wisdom based on tags.
@@ -40,7 +41,7 @@ class WisdomEngine {
     final availableWisdom = candidates.where((wisdom) {
       final lastShown = _lastShownTimestamps[wisdom.id];
       if (lastShown == null) return true;
-      
+
       final secondsSinceShown = now.difference(lastShown).inSeconds;
       return secondsSinceShown >= wisdom.minCooldownSeconds;
     }).toList();
@@ -49,7 +50,7 @@ class WisdomEngine {
 
     // Randomly select from available wisdom
     final selected = availableWisdom[_random.nextInt(availableWisdom.length)];
-    
+
     // Record timestamp
     _lastShownTimestamps[selected.id] = now;
 
@@ -60,7 +61,7 @@ class WisdomEngine {
   /// Call this when displaying wisdom to player.
   void markWisdomShown(WisdomEntry wisdom, {bool savedToLogbook = false}) {
     _lastShownTimestamps[wisdom.id] = DateTime.now();
-    
+
     _sessionWisdom.add(DisplayedWisdom(
       entry: wisdom,
       timestamp: DateTime.now(),
@@ -71,18 +72,16 @@ class WisdomEngine {
   /// Get recent wisdom within the last N minutes (for anti-spam)
   List<DisplayedWisdom> getRecentWisdom({int minutes = 10}) {
     final cutoff = DateTime.now().subtract(Duration(minutes: minutes));
-    return _sessionWisdom
-        .where((dw) => dw.timestamp.isAfter(cutoff))
-        .toList();
+    return _sessionWisdom.where((dw) => dw.timestamp.isAfter(cutoff)).toList();
   }
 
   /// Check if wisdom can be shown (respects global cooldown)
   bool canShowWisdom({int minMinutesBetween = 3}) {
     if (_sessionWisdom.isEmpty) return true;
-    
+
     final lastShown = _sessionWisdom.last.timestamp;
     final minutesSince = DateTime.now().difference(lastShown).inMinutes;
-    
+
     return minutesSince >= minMinutesBetween;
   }
 
