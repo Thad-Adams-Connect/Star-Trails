@@ -5,13 +5,18 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:video_player_media_kit/video_player_media_kit.dart';
 import 'providers/game_provider.dart';
-import 'screens/menu_screen.dart';
+import 'screens/splash_screen.dart';
 import 'utils/theme.dart';
 import 'utils/app_version.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  VideoPlayerMediaKit.ensureInitialized(
+    windows: true,
+    linux: true,
+  );
   await AppVersion.initialize();
   runApp(const StarTrailsApp());
 }
@@ -36,7 +41,7 @@ class StarTrailsApp extends StatelessWidget {
             onSurface: AppTheme.phosphorGreenBright,
           ),
         ),
-        home: const MenuScreen(),
+        home: const SplashScreen(),
       ),
     );
   }
