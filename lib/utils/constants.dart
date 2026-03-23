@@ -13,15 +13,38 @@ class MarketItemPrice {
   const MarketItemPrice({required this.buy, required this.sell});
 }
 
+enum SystemEconomyType {
+  medical,
+  mining,
+  agricultural,
+  industrial,
+}
+
+class SystemEconomyProfile {
+  final SystemEconomyType type;
+  final String advantageCommodity;
+  final String disadvantageCommodity;
+  final double buyPriceModifier;
+  final double sellPriceModifier;
+
+  const SystemEconomyProfile({
+    required this.type,
+    required this.advantageCommodity,
+    required this.disadvantageCommodity,
+    required this.buyPriceModifier,
+    required this.sellPriceModifier,
+  });
+}
+
 class GameConstants {
   static const int initialFuel = 10;
   static const int initialCredits = 1000;
   static const int finalCreditMilestone = 25000;
   static const List<int> creditLevelMilestones = [
-    5000,   // Tier 1 unlock threshold
-    10000,  // Tier 2 unlock threshold
-    18000,  // Tier 3 unlock threshold
-    25000,  // Tier 4 unlock threshold (final milestone)
+    5000, // Tier 1 unlock threshold
+    10000, // Tier 2 unlock threshold
+    18000, // Tier 3 unlock threshold
+    25000, // Tier 4 unlock threshold (final milestone)
   ];
 
   // Credit progression unlock thresholds
@@ -36,7 +59,7 @@ class GameConstants {
   static const int routeUsesPerAdjustment =
       2; // Uses needed for each 5% price change
   static const double routePriceAdjustmentPercent =
-      0.05; // 5% price change per adjustment
+      0.08; // 8% price change per adjustment
   static const int routeRecoveryThreshold =
       5; // Different trades needed for recovery
   static const int routeRecoveryAmount = 2; // Uses removed on recovery
@@ -372,8 +395,154 @@ class GameConstants {
     },
   };
 
+  static const Map<String, SystemEconomyProfile> systemEconomies = {
+    'HELIOS REACH': SystemEconomyProfile(
+      type: SystemEconomyType.industrial,
+      advantageCommodity: 'Tech',
+      disadvantageCommodity: 'Medicine',
+      buyPriceModifier: 1.00,
+      sellPriceModifier: 0.98,
+    ),
+    'SOLACE STATION': SystemEconomyProfile(
+      type: SystemEconomyType.medical,
+      advantageCommodity: 'Medicine',
+      disadvantageCommodity: 'Ore',
+      buyPriceModifier: 0.95,
+      sellPriceModifier: 0.98,
+    ),
+    'KESTREL BELT': SystemEconomyProfile(
+      type: SystemEconomyType.mining,
+      advantageCommodity: 'Ore',
+      disadvantageCommodity: 'Food',
+      buyPriceModifier: 0.92,
+      sellPriceModifier: 0.96,
+    ),
+    'MERIDIAN OUTPOST': SystemEconomyProfile(
+      type: SystemEconomyType.agricultural,
+      advantageCommodity: 'Food',
+      disadvantageCommodity: 'Tech',
+      buyPriceModifier: 0.92,
+      sellPriceModifier: 0.97,
+    ),
+    'ORIVAULT COMPLEX': SystemEconomyProfile(
+      type: SystemEconomyType.industrial,
+      advantageCommodity: 'Tech',
+      disadvantageCommodity: 'Food',
+      buyPriceModifier: 0.94,
+      sellPriceModifier: 0.98,
+    ),
+    'CANDESCENT YARD': SystemEconomyProfile(
+      type: SystemEconomyType.mining,
+      advantageCommodity: 'Ore',
+      disadvantageCommodity: 'Medicine',
+      buyPriceModifier: 0.93,
+      sellPriceModifier: 0.97,
+    ),
+    'FLUXHAVEN INSTITUTE': SystemEconomyProfile(
+      type: SystemEconomyType.medical,
+      advantageCommodity: 'Medicine',
+      disadvantageCommodity: 'Luxury',
+      buyPriceModifier: 0.96,
+      sellPriceModifier: 0.99,
+    ),
+    'VELARIS ENCLAVE': SystemEconomyProfile(
+      type: SystemEconomyType.industrial,
+      advantageCommodity: 'Luxury',
+      disadvantageCommodity: 'Food',
+      buyPriceModifier: 0.95,
+      sellPriceModifier: 0.99,
+    ),
+    'GATEFORGE BASTION': SystemEconomyProfile(
+      type: SystemEconomyType.mining,
+      advantageCommodity: 'Ore',
+      disadvantageCommodity: 'Medicine',
+      buyPriceModifier: 0.93,
+      sellPriceModifier: 0.97,
+    ),
+    'REDHAVEN ANCHORPOINT': SystemEconomyProfile(
+      type: SystemEconomyType.agricultural,
+      advantageCommodity: 'Food',
+      disadvantageCommodity: 'Tech',
+      buyPriceModifier: 0.93,
+      sellPriceModifier: 0.98,
+    ),
+    'STARTRAIL EXPANSE': SystemEconomyProfile(
+      type: SystemEconomyType.agricultural,
+      advantageCommodity: 'Food',
+      disadvantageCommodity: 'Medicine',
+      buyPriceModifier: 0.92,
+      sellPriceModifier: 0.98,
+    ),
+    'OUTERCREST NEXUS': SystemEconomyProfile(
+      type: SystemEconomyType.industrial,
+      advantageCommodity: 'Tech',
+      disadvantageCommodity: 'Food',
+      buyPriceModifier: 0.96,
+      sellPriceModifier: 1.00,
+    ),
+  };
+
+  static SystemEconomyProfile getSystemEconomy(String systemId) {
+    return systemEconomies[systemId] ??
+        const SystemEconomyProfile(
+          type: SystemEconomyType.industrial,
+          advantageCommodity: 'Tech',
+          disadvantageCommodity: 'Medicine',
+          buyPriceModifier: 1.0,
+          sellPriceModifier: 1.0,
+        );
+  }
+
+  static String formatEconomyType(SystemEconomyType type) {
+    switch (type) {
+      case SystemEconomyType.medical:
+        return 'Medical';
+      case SystemEconomyType.mining:
+        return 'Mining';
+      case SystemEconomyType.agricultural:
+        return 'Agricultural';
+      case SystemEconomyType.industrial:
+        return 'Industrial';
+    }
+  }
+
+  static double _economyPressureMultiplier(String systemId, String itemId) {
+    final profile = getSystemEconomy(systemId);
+    if (itemId == profile.advantageCommodity) {
+      if (itemId == 'Tech' || itemId == 'Luxury') {
+        final boostedAdvantage = profile.buyPriceModifier - 0.01;
+        return boostedAdvantage.clamp(0.85, 1.0);
+      }
+      return profile.buyPriceModifier;
+    }
+    if (itemId == profile.disadvantageCommodity) {
+      var pressure = 1.0 + (1.0 - profile.buyPriceModifier) * 0.8;
+      if (itemId == 'Tech' || itemId == 'Luxury') {
+        pressure += 0.03;
+        pressure = pressure.clamp(1.0, 1.15);
+      }
+      return pressure;
+    }
+    return 1.0;
+  }
+
   static MarketItemPrice getMarketPrice(String systemId, String itemId) {
-    return marketPrices[systemId]![itemId]!;
+    final basePrice = marketPrices[systemId]![itemId]!;
+    final profile = getSystemEconomy(systemId);
+    final pressureMultiplier = _economyPressureMultiplier(systemId, itemId);
+
+    var buy = (basePrice.buy * pressureMultiplier).round();
+    var sell = (basePrice.sell * pressureMultiplier * profile.sellPriceModifier)
+        .round();
+
+    if (sell >= buy) {
+      sell = buy - 1;
+    }
+
+    if (buy < 1) buy = 1;
+    if (sell < 0) sell = 0;
+
+    return MarketItemPrice(buy: buy, sell: sell);
   }
 
   // Fuel prices per planet
@@ -521,13 +690,17 @@ class GameConstants {
   }
 
   // System access helpers - based on accessActive state (with hysteresis)
-  static bool isTier1SystemActive(Map<String, CRAccessState> tierAccessStates) =>
+  static bool isTier1SystemActive(
+          Map<String, CRAccessState> tierAccessStates) =>
       tierAccessStates['1']?.accessActive ?? false;
-  static bool isTier2SystemActive(Map<String, CRAccessState> tierAccessStates) =>
+  static bool isTier2SystemActive(
+          Map<String, CRAccessState> tierAccessStates) =>
       tierAccessStates['2']?.accessActive ?? false;
-  static bool isTier3SystemActive(Map<String, CRAccessState> tierAccessStates) =>
+  static bool isTier3SystemActive(
+          Map<String, CRAccessState> tierAccessStates) =>
       tierAccessStates['3']?.accessActive ?? false;
-  static bool isTier4SystemActive(Map<String, CRAccessState> tierAccessStates) =>
+  static bool isTier4SystemActive(
+          Map<String, CRAccessState> tierAccessStates) =>
       tierAccessStates['4']?.accessActive ?? false;
 
   // Commodity/Upgrade helpers - based on discovered state (permanent once unlocked)
@@ -540,7 +713,8 @@ class GameConstants {
   static bool isTier4Discovered(Map<String, CRAccessState> tierAccessStates) =>
       tierAccessStates['4']?.discovered ?? false;
 
-  static bool isSystemUnlocked(String systemId, Map<String, CRAccessState> tierAccessStates) {
+  static bool isSystemUnlocked(
+      String systemId, Map<String, CRAccessState> tierAccessStates) {
     if (innerRingPlanetIds.contains(systemId)) {
       return true;
     }
@@ -559,7 +733,8 @@ class GameConstants {
     return false;
   }
 
-  static bool isCommodityUnlocked(String commodityId, Map<String, CRAccessState> tierAccessStates) {
+  static bool isCommodityUnlocked(
+      String commodityId, Map<String, CRAccessState> tierAccessStates) {
     if (baseCommodityIds.contains(commodityId)) {
       return true;
     }
@@ -572,20 +747,25 @@ class GameConstants {
     return false;
   }
 
-  static bool isComputerUpgradeUnlocked(Map<String, CRAccessState> tierAccessStates) =>
+  static bool isComputerUpgradeUnlocked(
+          Map<String, CRAccessState> tierAccessStates) =>
       isTier1Discovered(tierAccessStates);
-  static bool isEngineUpgradeUnlocked(Map<String, CRAccessState> tierAccessStates) =>
+  static bool isEngineUpgradeUnlocked(
+          Map<String, CRAccessState> tierAccessStates) =>
       isTier2Discovered(tierAccessStates);
-  static bool isClassCShipUnlocked(Map<String, CRAccessState> tierAccessStates) =>
+  static bool isClassCShipUnlocked(
+          Map<String, CRAccessState> tierAccessStates) =>
       isTier3Discovered(tierAccessStates);
 
-  static List<String> getAvailableSystems(Map<String, CRAccessState> tierAccessStates) {
+  static List<String> getAvailableSystems(
+      Map<String, CRAccessState> tierAccessStates) {
     return planetIds
         .where((id) => isSystemUnlocked(id, tierAccessStates))
         .toList();
   }
 
-  static List<String> getAvailableCommodities(Map<String, CRAccessState> tierAccessStates) {
+  static List<String> getAvailableCommodities(
+      Map<String, CRAccessState> tierAccessStates) {
     return itemIds
         .where((id) => isCommodityUnlocked(id, tierAccessStates))
         .toList();
@@ -593,8 +773,24 @@ class GameConstants {
 
   // Calculate actual fuel cost with engine upgrades applied
   // Returns at least minFuelPerTrip (minimum floor)
+  static int getRouteDistanceUnits(String from, String to) {
+    return travelCosts[from]?[to] ?? 999;
+  }
+
+  static int getMaxRouteDistanceUnits() {
+    var maxDistance = minFuelPerTrip;
+    for (final routes in travelCosts.values) {
+      for (final distance in routes.values) {
+        if (distance > maxDistance) {
+          maxDistance = distance;
+        }
+      }
+    }
+    return maxDistance;
+  }
+
   static int calculateFuelCost(String from, String to, int engineTier) {
-    final baseCost = travelCosts[from]?[to] ?? 999;
+    final baseCost = getRouteDistanceUnits(from, to);
     final reduction = engineTier; // Tier 1 = -1, Tier 2 = -2
     final adjustedCost = baseCost - reduction;
     return adjustedCost < minFuelPerTrip ? minFuelPerTrip : adjustedCost;

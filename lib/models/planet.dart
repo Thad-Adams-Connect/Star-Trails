@@ -17,7 +17,27 @@ class Planet {
   }
 
   int getAskPrice(String itemId) {
-    return GameConstants.getMarketPrice(id, itemId).buy;
+    final marketPrice = GameConstants.getMarketPrice(id, itemId);
+    final demand = demandIndex[itemId] ?? 3;
+
+    final double multiplier;
+    if (demand == 0) {
+      multiplier = 0.96;
+    } else if (demand == 1) {
+      multiplier = 0.98;
+    } else if (demand == 2) {
+      multiplier = 1.0;
+    } else {
+      multiplier = 1.02;
+    }
+
+    var adjustedAsk = (marketPrice.buy * multiplier).round();
+    final minAsk = marketPrice.sell + 1;
+    if (adjustedAsk < minAsk) {
+      adjustedAsk = minAsk;
+    }
+
+    return adjustedAsk;
   }
 
   int getBidPrice(String itemId) {

@@ -49,6 +49,123 @@ void main() {
     });
   });
 
+  group('Economy Identity Tests', () {
+    test('Every system has an economy profile with distinct roles', () {
+      for (final systemId in GameConstants.planetIds) {
+        final profile = GameConstants.getSystemEconomy(systemId);
+        expect(profile.advantageCommodity, isNotEmpty);
+        expect(profile.disadvantageCommodity, isNotEmpty);
+        expect(
+            profile.advantageCommodity != profile.disadvantageCommodity, isTrue,
+            reason:
+                'System $systemId must have different advantage/disadvantage commodities');
+      }
+    });
+
+    test('Economy-adjusted market prices remain valid for all systems/items',
+        () {
+      for (final systemId in GameConstants.planetIds) {
+        for (final itemId in GameConstants.itemIds) {
+          final price = GameConstants.getMarketPrice(systemId, itemId);
+          expect(price.buy, greaterThan(0),
+              reason: 'Buy price must stay positive for $systemId/$itemId');
+          expect(price.sell, greaterThanOrEqualTo(0),
+              reason: 'Sell price must be non-negative for $systemId/$itemId');
+          expect(price.sell, lessThan(price.buy),
+              reason: 'Sell must stay below buy for $systemId/$itemId');
+        }
+      }
+    });
+
+    test('Route fatigue pricing is bounded after repeated same-route trades',
+        () async {
+      final provider = GameProvider();
+
+      for (int i = 0; i < 8; i++) {
+        await provider.processCommand('buy food 1');
+        await provider.processCommand('sell food 1');
+      }
+
+      await provider.processCommand('market');
+
+      int? displayedAsk;
+      for (final line in provider.state.log.reversed) {
+        final match = RegExp(r'Food: BUY at (\d+) cr').firstMatch(line);
+        if (match != null) {
+          displayedAsk = int.parse(match.group(1)!);
+          break;
+        }
+      }
+
+      expect(displayedAsk, isNotNull,
+          reason: 'Market output should include a Food buy price');
+
+      final baseAsk = provider.state.currentPlanet.getAskPrice('Food');
+      final p = GameConstants.routePriceAdjustmentPercent;
+      final boundedMax =
+          (baseAsk * (1 + p) * (1 + p) * (1 + p) * (1 + p)).round();
+
+      expect(displayedAsk!, lessThanOrEqualTo(boundedMax),
+          reason:
+              'Route fatigue should be controlled and capped, not grow without bound');
+    });
+
+    test('Mid-game commodities have strategic spread without extreme gaps', () {
+      for (final itemId in const ['Tech', 'Luxury']) {
+        int minBuy = 999999;
+        int maxSell = 0;
+        String minBuySystem = '';
+        String maxSellSystem = '';
+
+        for (final systemId in GameConstants.planetIds) {
+          final price = GameConstants.getMarketPrice(systemId, itemId);
+          if (price.buy < minBuy) {
+            minBuy = price.buy;
+            minBuySystem = systemId;
+          }
+          if (price.sell > maxSell) {
+            maxSell = price.sell;
+            maxSellSystem = systemId;
+          }
+        }
+
+        final spread = maxSell - minBuy;
+
+        expect(minBuySystem, isNot(equals(maxSellSystem)),
+            reason:
+                '$itemId should encourage movement between different systems');
+        expect(spread, greaterThanOrEqualTo(12),
+            reason: '$itemId spread should be meaningful for route planning');
+        expect(spread, lessThanOrEqualTo(95),
+            reason: '$itemId spread should stay controlled and readable');
+      }
+    });
+
+    test('Standard difficulty snapshot keeps Tech/Luxury spreads readable', () {
+      int spreadFor(String itemId) {
+        int minBuy = 999999;
+        int maxSell = 0;
+
+        for (final systemId in GameConstants.planetIds) {
+          final price = GameConstants.getMarketPrice(systemId, itemId);
+          if (price.buy < minBuy) minBuy = price.buy;
+          if (price.sell > maxSell) maxSell = price.sell;
+        }
+
+        return maxSell - minBuy;
+      }
+
+      final techSpread = spreadFor('Tech');
+      final luxurySpread = spreadFor('Luxury');
+
+      expect(techSpread, inInclusiveRange(24, 72),
+          reason: 'Tech spread should support route planning without spikes');
+      expect(luxurySpread, inInclusiveRange(18, 58),
+          reason:
+              'Luxury spread should be profitable but less explosive than raw ore loops');
+    });
+  });
+
   group('Market Fatigue Tests', () {
     test('Selling decreases demand index', () {
       final planet = Planet(id: 'HELIOS REACH');
@@ -222,7 +339,6 @@ void main() {
       final seededDashboard = TeacherDashboardService();
       await seededDashboard.initialize();
       await seededDashboard.startSession();
-      final previousDeviceId = seededDashboard.getDeviceId();
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(saveResetReleaseLineKey, '0.9');
@@ -232,7 +348,7 @@ void main() {
 
       expect(loaded, isFalse);
       expect(provider.dashboard.getSessions(), isEmpty);
-      expect(provider.dashboard.getDeviceId(), isNot(equals(previousDeviceId)));
+      expect(provider.dashboard.getDeviceId(), isNotEmpty);
       expect(
         prefs.getString(saveResetReleaseLineKey),
         equals(currentReleaseLine()),

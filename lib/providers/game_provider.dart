@@ -6,6 +6,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
+import 'dart:math' as math;
 import '../models/game_state.dart';
 import '../models/planet.dart';
 import '../models/ship_upgrade.dart';
@@ -35,6 +36,7 @@ class GameProvider extends ChangeNotifier {
     'Your First Choice',
   };
   static const String _saveResetReleaseLineKey = 'save_data_release_line_v1';
+  static const bool _isFlutterTest = bool.fromEnvironment('FLUTTER_TEST');
 
   GameState _state = GameState.initial();
   final PersistenceService _persistence = PersistenceService();
@@ -52,6 +54,13 @@ class GameProvider extends ChangeNotifier {
   bool _saving = false;
   bool _saveQueued = false;
   Future<void>? _saveFuture;
+  bool _isTravelInProgress = false;
+  String _travelOriginSystem = '';
+  String _travelDestinationSystem = '';
+  int _travelDistanceUnits = 0;
+  int _travelFuelRequired = 0;
+  Duration _travelDuration = Duration.zero;
+  DateTime? _travelStartedAt;
   Timer? _introTimer;
   Timer? _narrativeTimer;
   Timer? _saveThrottleTimer;
@@ -70,6 +79,13 @@ class GameProvider extends ChangeNotifier {
   Stream<WisdomEntry> get wisdomStream => _wisdomStreamController.stream;
   bool get sessionIsGameOver => _sessionIsGameOver;
   bool get isNarrativeActive => _state.isNarrativeActive;
+  bool get isTravelInProgress => _isTravelInProgress;
+  String get travelOriginSystem => _travelOriginSystem;
+  String get travelDestinationSystem => _travelDestinationSystem;
+  int get travelDistanceUnits => _travelDistanceUnits;
+  int get travelFuelRequired => _travelFuelRequired;
+  Duration get travelDuration => _travelDuration;
+  DateTime? get travelStartedAt => _travelStartedAt;
 
   String get _introStoryWithPlayerShipName {
     final shipName = _state.shipName.trim();
@@ -419,7 +435,7 @@ class GameProvider extends ChangeNotifier {
         _handleUpgrade(parts);
         break;
       case 'travel':
-        _handleTravel(parts);
+        await _handleTravel(parts);
         break;
       case 'trip':
         _handleTrip(parts);
@@ -592,8 +608,12 @@ class GameProvider extends ChangeNotifier {
 
         // Show remote market
         final planet = _state.planets[systemInput]!;
+        final economy = GameConstants.getSystemEconomy(systemInput);
+        final economyType = GameConstants.formatEconomyType(economy.type);
         _addLog('');
         _addLog('MARKET at $systemInput:');
+        _addLog(
+            'Economy: $economyType  •  Advantage: ${economy.advantageCommodity}  •  Scarcity: ${economy.disadvantageCommodity}');
         _addLog('');
 
         final availableCommodities =
@@ -614,9 +634,13 @@ class GameProvider extends ChangeNotifier {
     // Show current docked system market
     final systemId = _state.location;
     final planet = _state.currentPlanet;
+    final economy = GameConstants.getSystemEconomy(systemId);
+    final economyType = GameConstants.formatEconomyType(economy.type);
 
     _addLog('');
     _addLog('MARKET at $systemId:');
+    _addLog(
+        'Economy: $economyType  •  Advantage: ${economy.advantageCommodity}  •  Scarcity: ${economy.disadvantageCommodity}');
     _addLog('');
 
     final availableCommodities =
@@ -960,7 +984,71 @@ class GameProvider extends ChangeNotifier {
     _addLog('');
   }
 
-  void _handleTravel(List<String> parts) {
+  Duration _calculateTravelDuration({
+    required int distanceUnits,
+    required int fuelRequired,
+  }) {
+    if (_isFlutterTest) {
+      return Duration.zero;
+    }
+
+    final maxDistanceUnits =
+        GameConstants.getMaxRouteDistanceUnits().toDouble();
+    final minDistanceUnits = GameConstants.minFuelPerTrip.toDouble();
+    final maxFuelUnits = maxDistanceUnits;
+    final minFuelUnits = GameConstants.minFuelPerTrip.toDouble();
+
+    final normalizedDistance = ((distanceUnits - minDistanceUnits) /
+            (maxDistanceUnits - minDistanceUnits))
+        .clamp(0.0, 1.0);
+    final normalizedFuel =
+        ((fuelRequired - minFuelUnits) / (maxFuelUnits - minFuelUnits))
+            .clamp(0.0, 1.0);
+
+    final weightedRouteIntensity =
+        (normalizedDistance * 0.72) + (normalizedFuel * 0.28);
+    final longHaulBonus = normalizedDistance * normalizedFuel * 0.18;
+    final curvedIntensity =
+        math.pow((weightedRouteIntensity + longHaulBonus).clamp(0.0, 1.0), 0.92)
+            as double;
+
+    final minDurationMs = 4500.0;
+    final maxDurationMs = 16000.0;
+    final rawDurationMs =
+        minDurationMs + ((maxDurationMs - minDurationMs) * curvedIntensity);
+    final clampedMs = rawDurationMs.clamp(minDurationMs, maxDurationMs).round();
+    return Duration(milliseconds: clampedMs);
+  }
+
+  void _startTravelLoading({
+    required String from,
+    required String to,
+    required int distanceUnits,
+    required int fuelRequired,
+    required Duration duration,
+  }) {
+    _isTravelInProgress = true;
+    _travelOriginSystem = from;
+    _travelDestinationSystem = to;
+    _travelDistanceUnits = distanceUnits;
+    _travelFuelRequired = fuelRequired;
+    _travelDuration = duration;
+    _travelStartedAt = DateTime.now();
+    notifyListeners();
+  }
+
+  void _endTravelLoading() {
+    _isTravelInProgress = false;
+    _travelOriginSystem = '';
+    _travelDestinationSystem = '';
+    _travelDistanceUnits = 0;
+    _travelFuelRequired = 0;
+    _travelDuration = Duration.zero;
+    _travelStartedAt = null;
+    notifyListeners();
+  }
+
+  Future<void> _handleTravel(List<String> parts) async {
     if (parts.length < 2) {
       _addLog('Usage: travel <planet>');
       final availableSystems =
@@ -995,6 +1083,8 @@ class GameProvider extends ChangeNotifier {
 
     // Calculate fuel cost with engine upgrades applied
     final engineTier = _state.getEngineTier();
+    final distanceUnits =
+        GameConstants.getRouteDistanceUnits(_state.location, destInput);
     final fuelCost =
         GameConstants.calculateFuelCost(_state.location, destInput, engineTier);
 
@@ -1003,40 +1093,61 @@ class GameProvider extends ChangeNotifier {
       return;
     }
 
-    final newFuel = _state.fuel - fuelCost;
-    final newPlanets = Map<String, Planet>.from(_state.planets);
-    newPlanets[destInput] = newPlanets[destInput]!.increaseDemandAll();
+    final travelDuration = _calculateTravelDuration(
+      distanceUnits: distanceUnits,
+      fuelRequired: fuelCost,
+    );
 
-    _updateState(
-        _state.copyWith(
-          location: destInput,
-          fuel: newFuel,
-          planets: newPlanets,
-          totalFuelUsed: _state.totalFuelUsed + fuelCost,
-        ),
-        notify: false);
+    _startTravelLoading(
+      from: _state.location,
+      to: destInput,
+      distanceUnits: distanceUnits,
+      fuelRequired: fuelCost,
+      duration: travelDuration,
+    );
 
-    _addLog('');
-    _addLog('Traveled to $destInput. Used $fuelCost fuel.');
-    if (engineTier > 0) {
-      _addLog('(Engine upgrade reduced fuel cost by $engineTier)');
+    try {
+      if (travelDuration > Duration.zero) {
+        await Future<void>.delayed(travelDuration);
+      }
+
+      final newFuel = _state.fuel - fuelCost;
+      final newPlanets = Map<String, Planet>.from(_state.planets);
+      newPlanets[destInput] = newPlanets[destInput]!.increaseDemandAll();
+
+      _updateState(
+          _state.copyWith(
+            location: destInput,
+            fuel: newFuel,
+            planets: newPlanets,
+            totalFuelUsed: _state.totalFuelUsed + fuelCost,
+          ),
+          notify: false);
+
+      _addLog('');
+      _addLog('Traveled to $destInput. Used $fuelCost fuel.');
+      if (engineTier > 0) {
+        _addLog('(Engine upgrade reduced fuel cost by $engineTier)');
+      }
+      _addLog('Fuel remaining: $newFuel');
+      _addLog('');
+      _addLog(_state.currentPlanet.getDescription());
+      _addLog('');
+
+      // Trigger wisdom for travel (planning/efficiency)
+      final wisdomTags = <String>['preparation', 'planning'];
+      if (newFuel < _state.getFuelCapacity() * 0.3) {
+        // Low fuel warning
+        wisdomTags.addAll(['risk', 'warning', 'fuel']);
+      }
+      _triggerWisdom(wisdomTags);
+
+      _maybeShowEduPrompt(
+          'Traveling uses fuel and restores demand at your destination. Plan your route to maximize profit!');
+      _queueSystemHistoryIfFirstVisit(destInput);
+    } finally {
+      _endTravelLoading();
     }
-    _addLog('Fuel remaining: $newFuel');
-    _addLog('');
-    _addLog(_state.currentPlanet.getDescription());
-    _addLog('');
-
-    // Trigger wisdom for travel (planning/efficiency)
-    final wisdomTags = <String>['preparation', 'planning'];
-    if (newFuel < _state.getFuelCapacity() * 0.3) {
-      // Low fuel warning
-      wisdomTags.addAll(['risk', 'warning', 'fuel']);
-    }
-    _triggerWisdom(wisdomTags);
-
-    _maybeShowEduPrompt(
-        'Traveling uses fuel and restores demand at your destination. Plan your route to maximize profit!');
-    _queueSystemHistoryIfFirstVisit(destInput);
   }
 
   void _handleUpgrade(List<String> parts) {
@@ -1954,8 +2065,10 @@ class GameProvider extends ChangeNotifier {
     // After that, every N additional executions: ±X% price change
     final excessUses = usageCount - (GameConstants.routeFreeUses - 1);
     final priceAdjustments = excessUses ~/ GameConstants.routeUsesPerAdjustment;
+    final cappedAdjustments =
+        priceAdjustments.clamp(0, _maxRouteAdjustmentSteps(system, commodity));
 
-    if (priceAdjustments <= 0) {
+    if (cappedAdjustments <= 0) {
       return basePrice;
     }
 
@@ -1966,11 +2079,25 @@ class GameProvider extends ChangeNotifier {
             ? GameConstants.routePriceAdjustmentPercent
             : -GameConstants.routePriceAdjustmentPercent);
 
-    for (int i = 0; i < priceAdjustments; i++) {
+    for (int i = 0; i < cappedAdjustments; i++) {
       adjustedPrice *= adjustmentMultiplier;
     }
 
-    return adjustedPrice.round();
+    return adjustedPrice.round().clamp(1, 99999);
+  }
+
+  int _maxRouteAdjustmentSteps(String system, String commodity) {
+    final economy = GameConstants.getSystemEconomy(system);
+
+    if (economy.type == SystemEconomyType.mining && commodity == 'Ore') {
+      return 4;
+    }
+
+    if (economy.type == SystemEconomyType.agricultural && commodity == 'Food') {
+      return 3;
+    }
+
+    return 4;
   }
 
   /// Record a trade on a route

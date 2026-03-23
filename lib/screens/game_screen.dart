@@ -16,6 +16,7 @@ import '../utils/starfield_painter.dart';
 import '../utils/grid_overlay_painter.dart';
 import '../utils/pixel_route.dart';
 import '../widgets/captain_transmission_panel.dart';
+import '../widgets/travel_loading_overlay.dart';
 import 'end_run_screen.dart';
 import 'logbook_screen.dart';
 
@@ -61,7 +62,7 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
 
   void _showWisdomPanel(WisdomEntry wisdom) {
     if (!mounted) return;
-    
+
     final provider = context.read<GameProvider>();
     CaptainTransmissionOverlay.show(
       context,
@@ -159,6 +160,10 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
     final provider = context.read<GameProvider>();
 
     if (provider.isNarrativeActive) {
+      return;
+    }
+
+    if (provider.isTravelInProgress) {
       return;
     }
 
@@ -369,6 +374,27 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                     ),
                   ),
                   if (provider.showEduPrompt) _buildEduPrompt(provider),
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 250),
+                    switchInCurve: Curves.easeOut,
+                    switchOutCurve: Curves.easeIn,
+                    child: provider.isTravelInProgress
+                        ? SizedBox.expand(
+                            key: ValueKey<String>(
+                              'travel-${provider.travelStartedAt?.microsecondsSinceEpoch ?? 0}',
+                            ),
+                            child: TravelLoadingOverlay(
+                              fromSystem: provider.travelOriginSystem,
+                              toSystem: provider.travelDestinationSystem,
+                              distanceUnits: provider.travelDistanceUnits,
+                              fuelRequired: provider.travelFuelRequired,
+                              totalDuration: provider.travelDuration,
+                            ),
+                          )
+                        : const SizedBox.shrink(
+                            key: ValueKey<String>('travel-idle'),
+                          ),
+                  ),
                 ],
               );
             },
@@ -492,7 +518,9 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
       builder: (context, provider, _) {
         final isIntroActive = provider.isIntroActive;
         final isNarrativeActive = provider.isNarrativeActive;
-        final isInputDisabled = isIntroActive || isNarrativeActive;
+        final isTravelInProgress = provider.isTravelInProgress;
+        final isInputDisabled =
+            isIntroActive || isNarrativeActive || isTravelInProgress;
         return Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
@@ -517,8 +545,9 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                   child: TextField(
                     controller: _commandController,
                     focusNode: _commandFocusNode,
-                    autofocus: true,
-                    enabled: !isInputDisabled,
+                    autofocus: false,
+                    enabled: true,
+                    readOnly: isInputDisabled,
                     style: AppTheme.terminalPrompt,
                     decoration: InputDecoration(
                       border: InputBorder.none,
@@ -526,7 +555,9 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                           ? 'Narrative in progress'
                           : isNarrativeActive
                               ? 'Narrative in progress'
-                              : 'Enter command',
+                              : isTravelInProgress
+                                  ? 'Travel in progress'
+                                  : 'Enter command',
                       hintStyle:
                           const TextStyle(color: AppTheme.phosphorGreenDim),
                     ),
@@ -542,11 +573,12 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
               Material(
                 color: Colors.transparent,
                 child: InkWell(
-                  onTap: (isNarrativeActive || isIntroActive)
-                      ? null
-                      : () async {
-                          await _sendCommand();
-                        },
+                  onTap:
+                      (isNarrativeActive || isIntroActive || isTravelInProgress)
+                          ? null
+                          : () async {
+                              await _sendCommand();
+                            },
                   borderRadius: BorderRadius.circular(6),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
@@ -570,7 +602,9 @@ class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
                           ? 'WAIT'
                           : isNarrativeActive
                               ? 'WAIT'
-                              : 'SEND',
+                              : isTravelInProgress
+                                  ? 'TRAVEL'
+                                  : 'SEND',
                       style: const TextStyle(
                         color: AppTheme.phosphorGreenBright,
                         fontWeight: FontWeight.bold,

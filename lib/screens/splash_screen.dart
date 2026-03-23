@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
@@ -50,7 +51,7 @@ class _SplashScreenState extends State<SplashScreen>
 
     _controller = candidate;
     await _controller!.setLooping(false);
-    await _controller!.setVolume(1.0);
+    await _controller!.setVolume(kIsWeb ? 0.0 : 1.0);
     _controller!.addListener(_handlePlaybackProgress);
 
     if (!mounted) {
@@ -65,7 +66,7 @@ class _SplashScreenState extends State<SplashScreen>
 
     try {
       await _controller!.play();
-    } catch (e) {
+    } catch (_) {
       _navigateToMenu();
     }
   }
