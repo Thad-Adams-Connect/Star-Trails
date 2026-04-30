@@ -6,10 +6,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import '../data/demo_disclaimer.dart';
 import '../data/intro_story.dart';
 import '../data/system_histories.dart';
 import '../models/teacher_dashboard.dart';
 import '../providers/game_provider.dart';
+import '../utils/app_version.dart';
 import '../utils/grid_overlay_painter.dart';
 import '../utils/hud_panel_border.dart';
 import '../utils/reflection_grouping.dart';
@@ -122,6 +124,7 @@ class _LogbookScreenState extends State<LogbookScreen> {
     final allWisdom = _buildWisdomEntries(
       wisdomEntries: dashboardData.wisdomEntries,
     );
+    final showDemoDisclaimer = AppVersion.editionCode.startsWith('EDU');
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -191,12 +194,16 @@ class _LogbookScreenState extends State<LogbookScreen> {
                                           sessions: orderedSessions,
                                           systemEntriesBySession:
                                               systemEntriesBySession,
+                                          showDemoDisclaimer:
+                                              showDemoDisclaimer,
                                         ),
                                         _CaptainsLogSection(
                                           orderedSessionIds: orderedSessionIds,
                                           sessionNumberById: sessionNumberById,
                                           reflectionsBySession:
                                               reflectionsBySession,
+                                          showDemoDisclaimer:
+                                              showDemoDisclaimer,
                                           onEdit: (reflection) =>
                                               _editReflection(
                                                   context, reflection),
@@ -212,11 +219,18 @@ class _LogbookScreenState extends State<LogbookScreen> {
                                               provider.state.isIntroActive,
                                           firstChoiceActive:
                                               provider.state.firstChoiceActive,
+                                          showDemoDisclaimer:
+                                              showDemoDisclaimer,
                                         ),
                                         _WordsOfWisdomSection(
                                           wisdomEntries: allWisdom,
+                                          showDemoDisclaimer:
+                                              showDemoDisclaimer,
                                         ),
-                                        const _CalculatorsSection(),
+                                        _CalculatorsSection(
+                                          showDemoDisclaimer:
+                                              showDemoDisclaimer,
+                                        ),
                                       ],
                                     ),
                                   ),
@@ -318,15 +332,23 @@ class _NotebookTabBar extends StatelessWidget {
 class _SessionRecapsSection extends StatelessWidget {
   final List<SessionRecord> sessions;
   final Map<String, List<SystemEntryRecord>> systemEntriesBySession;
+  final bool showDemoDisclaimer;
 
   const _SessionRecapsSection({
     required this.sessions,
     required this.systemEntriesBySession,
+    required this.showDemoDisclaimer,
   });
 
   @override
   Widget build(BuildContext context) {
     if (sessions.isEmpty) {
+      if (showDemoDisclaimer) {
+        return const _EmptySectionWithFooter(
+          message:
+              'No session recaps yet.\n\nComplete a run to populate this section.',
+        );
+      }
       return const _EmptySectionMessage(
         message:
             'No session recaps yet.\n\nComplete a run to populate this section.',
@@ -335,8 +357,12 @@ class _SessionRecapsSection extends StatelessWidget {
 
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      itemCount: sessions.length,
+      itemCount: sessions.length + (showDemoDisclaimer ? 1 : 0),
       itemBuilder: (context, index) {
+        if (showDemoDisclaimer && index == sessions.length) {
+          return const _DemoDisclaimerFooter();
+        }
+
         final session = sessions[index];
 
         return Padding(
@@ -413,12 +439,14 @@ class _CaptainsLogSection extends StatelessWidget {
   final List<String> orderedSessionIds;
   final Map<String, int> sessionNumberById;
   final Map<String, List<ReflectionRecord>> reflectionsBySession;
+  final bool showDemoDisclaimer;
   final ValueChanged<ReflectionRecord> onEdit;
 
   const _CaptainsLogSection({
     required this.orderedSessionIds,
     required this.sessionNumberById,
     required this.reflectionsBySession,
+    required this.showDemoDisclaimer,
     required this.onEdit,
   });
 
@@ -429,6 +457,12 @@ class _CaptainsLogSection extends StatelessWidget {
         .toList();
 
     if (sessionsWithReflections.isEmpty) {
+      if (showDemoDisclaimer) {
+        return const _EmptySectionWithFooter(
+          message:
+              'No captain reflections yet.\n\nComplete an end-run reflection to add entries.',
+        );
+      }
       return const _EmptySectionMessage(
         message:
             'No captain reflections yet.\n\nComplete an end-run reflection to add entries.',
@@ -437,8 +471,12 @@ class _CaptainsLogSection extends StatelessWidget {
 
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      itemCount: sessionsWithReflections.length,
+      itemCount: sessionsWithReflections.length + (showDemoDisclaimer ? 1 : 0),
       itemBuilder: (context, index) {
+        if (showDemoDisclaimer && index == sessionsWithReflections.length) {
+          return const _DemoDisclaimerFooter();
+        }
+
         final sessionId = sessionsWithReflections[index];
         final reflections = reflectionsBySession[sessionId] ?? const [];
         final sessionNumber = sessionNumberById[sessionId] ?? (index + 1);
@@ -474,6 +512,7 @@ class _IntroAndHistoriesSection extends StatelessWidget {
   final String shipName;
   final bool isIntroActive;
   final bool firstChoiceActive;
+  final bool showDemoDisclaimer;
 
   const _IntroAndHistoriesSection({
     required this.systemEntriesBySession,
@@ -482,6 +521,7 @@ class _IntroAndHistoriesSection extends StatelessWidget {
     required this.shipName,
     required this.isIntroActive,
     required this.firstChoiceActive,
+    required this.showDemoDisclaimer,
   });
 
   String _getPersonalizedIntro() {
@@ -525,6 +565,10 @@ class _IntroAndHistoriesSection extends StatelessWidget {
           const _EmptySectionMessage(
             message: 'Travel to new systems to discover their histories.',
           ),
+          if (showDemoDisclaimer) ...[
+            const SizedBox(height: 20),
+            const _DemoDisclaimerFooter(),
+          ],
         ],
       );
     }
@@ -566,6 +610,10 @@ class _IntroAndHistoriesSection extends StatelessWidget {
           const _EmptySectionMessage(
             message: 'Travel to new systems to discover their histories.',
           ),
+          if (showDemoDisclaimer) ...[
+            const SizedBox(height: 20),
+            const _DemoDisclaimerFooter(),
+          ],
         ],
       );
     }
@@ -588,6 +636,7 @@ class _IntroAndHistoriesSection extends StatelessWidget {
           ),
           const SizedBox(height: 20),
         ],
+        if (showDemoDisclaimer) const _DemoDisclaimerFooter(),
       ],
     );
   }
@@ -595,12 +644,21 @@ class _IntroAndHistoriesSection extends StatelessWidget {
 
 class _WordsOfWisdomSection extends StatelessWidget {
   final List<String> wisdomEntries;
+  final bool showDemoDisclaimer;
 
-  const _WordsOfWisdomSection({required this.wisdomEntries});
+  const _WordsOfWisdomSection({
+    required this.wisdomEntries,
+    required this.showDemoDisclaimer,
+  });
 
   @override
   Widget build(BuildContext context) {
     if (wisdomEntries.isEmpty) {
+      if (showDemoDisclaimer) {
+        return const _EmptySectionWithFooter(
+          message: 'No words of wisdom yet.',
+        );
+      }
       return const _EmptySectionMessage(
         message: 'No words of wisdom yet.',
       );
@@ -608,8 +666,12 @@ class _WordsOfWisdomSection extends StatelessWidget {
 
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      itemCount: wisdomEntries.length,
+      itemCount: wisdomEntries.length + (showDemoDisclaimer ? 1 : 0),
       itemBuilder: (context, index) {
+        if (showDemoDisclaimer && index == wisdomEntries.length) {
+          return const _DemoDisclaimerFooter();
+        }
+
         return Padding(
           padding: const EdgeInsets.only(bottom: 16),
           child: _NotebookSectionCard(
@@ -626,7 +688,9 @@ class _WordsOfWisdomSection extends StatelessWidget {
 }
 
 class _CalculatorsSection extends StatefulWidget {
-  const _CalculatorsSection();
+  final bool showDemoDisclaimer;
+
+  const _CalculatorsSection({required this.showDemoDisclaimer});
 
   @override
   State<_CalculatorsSection> createState() => _CalculatorsSectionState();
@@ -958,7 +1022,159 @@ class _CalculatorsSectionState extends State<_CalculatorsSection> {
               const SizedBox(height: 16),
           ],
         ],
+        if (widget.showDemoDisclaimer) ...[
+          const SizedBox(height: 20),
+          const _DemoDisclaimerFooter(),
+        ],
       ],
+    );
+  }
+}
+
+Future<void> _showDemoDisclaimerSheet(BuildContext context) {
+  final screenHeight = MediaQuery.sizeOf(context).height;
+
+  return showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    barrierColor: Colors.black.withValues(alpha: 0.55),
+    builder: (context) {
+      return SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
+          child: Container(
+            height: screenHeight * 0.74,
+            decoration: BoxDecoration(
+              color: const Color(0xFF05070A),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(22),
+              ),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.08),
+              ),
+            ),
+            child: Column(
+              children: [
+                const SizedBox(height: 10),
+                Container(
+                  width: 42,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 18, 20, 14),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Demo Notice',
+                          style: AppTheme.terminalBody.copyWith(
+                            color: Colors.white.withValues(alpha: 0.92),
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        splashRadius: 18,
+                        icon: Icon(
+                          Icons.close_rounded,
+                          size: 18,
+                          color: Colors.white.withValues(alpha: 0.7),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+                    child: Text(
+                      demoDisclaimerText,
+                      style: AppTheme.terminalBody.copyWith(
+                        color: Colors.white.withValues(alpha: 0.82),
+                        fontSize: 12.5,
+                        height: 1.5,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    },
+  );
+}
+
+class _DemoDisclaimerFooter extends StatelessWidget {
+  const _DemoDisclaimerFooter();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Column(
+        children: [
+          Container(
+            height: 1,
+            color: Colors.white.withValues(alpha: 0.08),
+          ),
+          const SizedBox(height: 12),
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () => _showDemoDisclaimerSheet(context),
+              borderRadius: BorderRadius.circular(10),
+              child: Ink(
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.24),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.05),
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 11,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          demoDisclaimerPreview,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTheme.terminalBody.copyWith(
+                            color: Colors.white.withValues(alpha: 0.56),
+                            fontSize: 11,
+                            letterSpacing: 0.15,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        size: 16,
+                        color: Colors.white.withValues(alpha: 0.52),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -1179,6 +1395,38 @@ class _EmptySectionMessage extends StatelessWidget {
           textAlign: TextAlign.center,
         ),
       ),
+    );
+  }
+}
+
+class _EmptySectionWithFooter extends StatelessWidget {
+  final String message;
+
+  const _EmptySectionWithFooter({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final contentHeight = (constraints.maxHeight - 16).clamp(240.0, 1200.0);
+
+        return ListView(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          children: [
+            SizedBox(
+              height: contentHeight,
+              child: Column(
+                children: [
+                  const Spacer(),
+                  _EmptySectionMessage(message: message),
+                  const Spacer(),
+                  const _DemoDisclaimerFooter(),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
